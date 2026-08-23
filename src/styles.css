@@ -123,6 +123,128 @@
     border: 2px solid transparent;
     background-clip: padding-box;
   }
+
+  .bot-mark-shell {
+    fill: var(--color-elevated);
+  }
+
+  .bot-mark-face {
+    fill: var(--color-fg);
+  }
+
+  .bot-mark-ring {
+    stroke: var(--color-primary);
+    stroke-width: 2.2;
+  }
+
+  .bot-mark-eye {
+    fill: var(--color-bg);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .bot-mark-think .bot-mark-eye-left {
+    animation: bot-think-left 1.7s var(--ease-smooth-out);
+  }
+
+  .bot-mark-think .bot-mark-eye-right {
+    animation: bot-think-right 1.7s var(--ease-smooth-out);
+  }
+
+  .bot-mark-think .bot-mark-ring {
+    animation: bot-ring-think 1.7s var(--ease-smooth-out);
+  }
+
+  .bot-mark-blink .bot-mark-eye {
+    animation: bot-blink 320ms var(--ease-smooth-out);
+  }
+
+  .bot-mark-double-blink .bot-mark-eye {
+    animation: bot-double-blink 620ms var(--ease-smooth-out);
+  }
+
+  .bot-mark-glance .bot-mark-eyes {
+    animation: bot-glance 980ms var(--ease-smooth-out);
+  }
+}
+
+@keyframes bot-think-left {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  18% {
+    transform: translateY(-1.8px) scaleY(1.06);
+  }
+  42% {
+    transform: translateY(1.1px) scaleY(0.92);
+  }
+  68% {
+    transform: translateY(-1.1px) scaleY(1.04);
+  }
+}
+
+@keyframes bot-think-right {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  22% {
+    transform: translateY(1.2px) scaleY(0.9);
+  }
+  48% {
+    transform: translateY(-2px) scaleY(1.08);
+  }
+  74% {
+    transform: translateY(0.7px) scaleY(0.96);
+  }
+}
+
+@keyframes bot-ring-think {
+  0%,
+  100% {
+    stroke-opacity: 1;
+  }
+  40% {
+    stroke-opacity: 0.55;
+  }
+}
+
+@keyframes bot-blink {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes bot-double-blink {
+  0%,
+  22%,
+  48%,
+  70%,
+  100% {
+    transform: scaleY(1);
+  }
+  12%,
+  58% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes bot-glance {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  28% {
+    transform: translateX(-2.2px);
+  }
+  68% {
+    transform: translateX(2.1px);
+  }
 }
 
 @media (min-width: 768px) {

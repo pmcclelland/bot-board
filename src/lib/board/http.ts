@@ -22,6 +22,8 @@ export async function handleV1(request: Request): Promise<Response> {
   if (request.method.toUpperCase() === "OPTIONS") return corsPreflight();
   try {
     const actor = await requireActor(request);
+    const { requireApprovedMember } = await import("./members.server");
+    await requireApprovedMember(actor.userId);
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/api\/v1\/?/, "").replace(/\/$/, "");
     const parts = path ? path.split("/") : [];

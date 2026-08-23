@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RedirectToSignIn } from "@/lib/auth/gates";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { useMembership } from "@/lib/board/use-membership";
 import {
   createTokenFn,
   listTokensFn,
@@ -15,7 +15,7 @@ import {
 export const Route = createFileRoute("/settings")({ component: Settings });
 
 function Settings() {
-  const { user, isPending } = useCurrentUserState();
+  const { user, isPending, isApproved } = useMembership();
   const queryClient = useQueryClient();
   const [name, setName] = useState("Grok Bot");
   const [secret, setSecret] = useState<string | null>(null);
@@ -23,7 +23,7 @@ function Settings() {
   const tokens = useQuery({
     queryKey: ["tokens"],
     queryFn: () => listTokensFn(),
-    enabled: Boolean(user),
+    enabled: Boolean(user) && isApproved,
   });
 
   const createToken = useMutation({
@@ -49,6 +49,7 @@ function Settings() {
     );
   }
   if (!user) return <RedirectToSignIn />;
+  if (!isApproved) return <Navigate to="/waiting" />;
 
   return (
     <main className="board-shell min-h-dvh bg-background px-4 py-10 text-fg">

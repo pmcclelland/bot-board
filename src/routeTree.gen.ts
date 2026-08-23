@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MembersRouteImport } from './routes/members'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as WaitingRouteImport } from './routes/waiting'
 import { Route as ApiMcpRouteImport } from './routes/api/mcp'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
@@ -26,9 +28,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MembersRoute = MembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaitingRoute = WaitingRouteImport.update({
+  id: '/waiting',
+  path: '/waiting',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpRoute = ApiMcpRouteImport.update({
@@ -50,7 +62,9 @@ const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof MembersRoute
   '/settings': typeof SettingsRoute
+  '/waiting': typeof WaitingRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/$': typeof ApiV1SplatRoute
@@ -58,7 +72,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof MembersRoute
   '/settings': typeof SettingsRoute
+  '/waiting': typeof WaitingRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/$': typeof ApiV1SplatRoute
@@ -67,7 +83,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof MembersRoute
   '/settings': typeof SettingsRoute
+  '/waiting': typeof WaitingRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/$': typeof ApiV1SplatRoute
@@ -75,14 +93,31 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/settings' | '/api/mcp' | '/api/auth/$' | '/api/v1/$'
+    | '/'
+    | '/login'
+    | '/members'
+    | '/settings'
+    | '/waiting'
+    | '/api/mcp'
+    | '/api/auth/$'
+    | '/api/v1/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/settings' | '/api/mcp' | '/api/auth/$' | '/api/v1/$'
+  to:
+    | '/'
+    | '/login'
+    | '/members'
+    | '/settings'
+    | '/waiting'
+    | '/api/mcp'
+    | '/api/auth/$'
+    | '/api/v1/$'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/members'
     | '/settings'
+    | '/waiting'
     | '/api/mcp'
     | '/api/auth/$'
     | '/api/v1/$'
@@ -91,7 +126,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  MembersRoute: typeof MembersRoute
   SettingsRoute: typeof SettingsRoute
+  WaitingRoute: typeof WaitingRoute
   ApiMcpRoute: typeof ApiMcpRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
@@ -113,11 +150,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/members': {
+      id: '/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waiting': {
+      id: '/waiting'
+      path: '/waiting'
+      fullPath: '/waiting'
+      preLoaderRoute: typeof WaitingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/mcp': {
@@ -147,7 +198,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  MembersRoute: MembersRoute,
   SettingsRoute: SettingsRoute,
+  WaitingRoute: WaitingRoute,
   ApiMcpRoute: ApiMcpRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,

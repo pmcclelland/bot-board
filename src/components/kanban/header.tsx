@@ -1,4 +1,4 @@
-import { KeyRound, Plus } from "lucide-react";
+import { KeyRound, Plus, Users } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,9 +14,10 @@ import { useState } from "react";
 
 type BoardHeaderProps = {
   onAdd: () => void;
+  isAdmin?: boolean;
 };
 
-export function BoardHeader({ onAdd }: BoardHeaderProps) {
+export function BoardHeader({ onAdd, isAdmin }: BoardHeaderProps) {
   const user = useCurrentUser();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
@@ -76,6 +77,12 @@ export function BoardHeader({ onAdd }: BoardHeaderProps) {
                   <p className="truncate text-xs text-subtle">{user.primaryEmail}</p>
                 ) : null}
               </div>
+              {isAdmin ? (
+                <DropdownMenuItem onSelect={() => navigate({ to: "/members" })}>
+                  <Users className="size-4" />
+                  Members
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onSelect={() => navigate({ to: "/settings" })}>
                 <KeyRound className="size-4" />
                 API tokens

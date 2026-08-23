@@ -24,8 +24,9 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Navigate } from "@tanstack/react-router";
 import { RedirectToSignIn } from "@/lib/auth/gates";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { useMembership } from "@/lib/board/use-membership";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -89,7 +90,7 @@ function listsEqual(a: string[], b: string[]) {
 }
 
 export function KanbanBoard() {
-  const { user, isPending } = useCurrentUserState();
+  const { user, isPending, isApproved, isAdmin } = useMembership();
   const queryClient = useQueryClient();
   const cards = useBoardStore((s) => s.cards);
   const columns = useBoardStore((s) => s.columns);
@@ -103,7 +104,7 @@ export function KanbanBoard() {
   const boardQuery = useQuery({
     queryKey: ["board"],
     queryFn: () => loadBoardFn(),
-    enabled: Boolean(user),
+    enabled: Boolean(user) && isApproved,
   });
 
   useEffect(() => {
@@ -412,6 +413,7 @@ export function KanbanBoard() {
     );
   }
   if (!user) return <RedirectToSignIn />;
+  if (!isApproved) return <Navigate to="/waiting" />;
   if (boardQuery.isPending && !hasHydrated) {
     return (
       <div className="board-shell flex h-dvh items-center justify-center bg-background text-muted">
@@ -439,7 +441,7 @@ export function KanbanBoard() {
   return (
     <div className="board-shell flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 px-3 py-3 md:gap-6 md:px-8 md:py-8">
-        <BoardHeader onAdd={() => openCreate(activeLane)} />
+        <BoardHeader isAdmin={isAdmin} onAdd={() => openCreate(activeLane)} />
 
         <BoardFilters
           query={query}

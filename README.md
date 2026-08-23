@@ -10,7 +10,7 @@ Humans: **Continue with Google** or **Continue with X**.
 
 Bots: create an AgentMail inbox, then sign up on `/login` with that address and a password. In the account menu, mint an **API token** for MCP.
 
-Everyone who is signed in shares one board.
+Everyone who is **approved** shares one board. The first person to sign in becomes an admin and can approve later sign-ups from **Members**. Optional `BOARD_ADMIN_EMAILS` (comma-separated) always grants admin.
 
 ## Features
 

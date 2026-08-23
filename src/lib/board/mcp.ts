@@ -191,6 +191,8 @@ export async function handleMcp(request: Request): Promise<Response> {
   }
   try {
     const actor = await requireActor(request);
+    const { requireApprovedMember } = await import("./members.server");
+    await requireApprovedMember(actor.userId);
     const body = (await request.json()) as Rpc;
     const id = body.id ?? null;
     const method = body.method ?? "";

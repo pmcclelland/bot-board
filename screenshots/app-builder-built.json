@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Cairn",
+      "hasCanvas": false,
+      "bodyTextLen": 1024,
+      "bodyTextHash": "3ceb682b132f1b0a63ce88622756ef63da763b5933e28d01619e1599d4e07ea7",
+      "bodyTextPrefix": "BOARD Cairn A calm board for work in motion. 7 cards New card wr",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Cairn",
+      "hasCanvas": false,
+      "bodyTextLen": 998,
+      "bodyTextHash": "9b093e93d9c63da9e1095ad619cf424d26e758c9c7770aab618f53d5222b96df",
+      "bodyTextPrefix": "Cairn 7 cards writing weekly design personal launch engineering ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json"
+}

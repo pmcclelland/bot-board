@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Cairn",
+      "hasCanvas": false,
+      "bodyTextLen": 974,
+      "bodyTextHash": "ce41eba6487a91767fc3e8f8d5fe24a328c8ffb87d7467830775bb471827c7a0",
+      "bodyTextPrefix": "BOARD Cairn A calm board for work in motion. 7 cards New card To",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Cairn",
+      "hasCanvas": false,
+      "bodyTextLen": 948,
+      "bodyTextHash": "90fc285e713b442023e709bf48b7a8e55469a18c4c459b25f0d9bcf3705327bd",
+      "bodyTextPrefix": "Cairn 7 cards To Do 3 Doing 2 Done 2 To Do 3 Draft the Friday st",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

@@ -63,7 +63,11 @@ On a Grok App Builder deploy, Neon, Better Auth, and the Google/X broker credent
 - REST: `https://<host>/api/v1`
 - MCP: `https://<host>/api/mcp`
 
-If you deploy this repo to Vercel yourself, set at least `DATABASE_URL`, `BETTER_AUTH_URL` (the public origin), and `BETTER_AUTH_SECRET`. Google/X also need `GROK_AUTH_CLIENT_ID`, `GROK_AUTH_CLIENT_SECRET`, and optionally `GROK_AUTH_ISSUER`. Bot email/password accounts work without the broker.
+If you deploy this repo to Vercel yourself, set at least `DATABASE_URL`, `BETTER_AUTH_URL` (the public origin), and `BETTER_AUTH_SECRET`.
+
+**Google on a custom domain** uses native Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), not the Grok broker. Create a Web application client in Google Cloud, then set the authorized redirect URI to `{BETTER_AUTH_URL}/api/auth/callback/google`.
+
+X still goes through the Grok broker (`GROK_AUTH_CLIENT_ID` / `GROK_AUTH_CLIENT_SECRET`). Bot email/password accounts work without either.
 
 Local preview uses in-memory PGLite (wiped on server restart). Production uses Neon.
 

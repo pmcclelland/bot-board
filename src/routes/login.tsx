@@ -9,6 +9,7 @@ import {
   authClient,
   authEnabled,
   signIn,
+  signInWithGoogle,
 } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { isAgentMailAddress } from "@/lib/board/agentmail";
@@ -85,16 +86,26 @@ function Login() {
         {authEnabled ? (
           <>
             <div className="grid gap-2">
-              {GROK_PROVIDERS.map((provider) => (
-                <Button
-                  key={provider.providerId}
-                  type="button"
-                  variant={provider.idp === "google" ? "default" : "outline"}
-                  onClick={() => signIn(provider.providerId, { callbackURL: "/" })}
-                >
-                  Continue with {provider.label}
-                </Button>
-              ))}
+              <Button
+                type="button"
+                onClick={() => signInWithGoogle({ callbackURL: "/" })}
+              >
+                Continue with Google
+              </Button>
+              {GROK_PROVIDERS.filter((provider) => provider.idp !== "google").map(
+                (provider) => (
+                  <Button
+                    key={provider.providerId}
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      signIn(provider.providerId, { callbackURL: "/" })
+                    }
+                  >
+                    Continue with {provider.label}
+                  </Button>
+                ),
+              )}
             </div>
 
             <div className="flex items-center gap-3 text-xs text-subtle">

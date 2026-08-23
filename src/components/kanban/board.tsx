@@ -42,6 +42,7 @@ import {
   type ColumnId,
   type Columns,
 } from "@/lib/board/types";
+import { BoardHeading } from "./board-heading";
 import { CardDialog, type CardDraft } from "./card-dialog";
 import { BoardFilters } from "./filters";
 import { BoardHeader } from "./header";
@@ -355,9 +356,6 @@ export function KanbanBoard() {
     <div className="board-shell flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 px-3 py-3 md:gap-6 md:px-8 md:py-8">
         <BoardHeader
-          total={total}
-          visible={visibleTotal}
-          filtering={filtering}
           onAdd={() => openCreate(activeLane)}
           onReset={() => {
             resetBoard();
@@ -378,15 +376,23 @@ export function KanbanBoard() {
           onClearTags={() => setSelectedTags([])}
         />
 
-        <LaneSwitcher
-          active={activeLane}
-          counts={{
-            todo: visibleLists.todo.length,
-            doing: visibleLists.doing.length,
-            done: visibleLists.done.length,
-          }}
-          onSelect={scrollToLane}
-        />
+        <div className="flex min-h-0 flex-1 flex-col gap-2 md:gap-3">
+          <BoardHeading
+            projectName={selectedProjectName}
+            visible={visibleTotal}
+            total={total}
+            filtering={filtering}
+          />
+
+          <LaneSwitcher
+            active={activeLane}
+            counts={{
+              todo: visibleLists.todo.length,
+              doing: visibleLists.doing.length,
+              done: visibleLists.done.length,
+            }}
+            onSelect={scrollToLane}
+          />
 
         <DndContext
           sensors={sensors}
@@ -434,6 +440,7 @@ export function KanbanBoard() {
             ) : null}
           </DragOverlay>
         </DndContext>
+        </div>
       </div>
 
       <CardDialog

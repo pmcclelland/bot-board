@@ -116,7 +116,9 @@ export function BoardFilters({
                 <Check
                   className={cn(
                     "size-4",
-                    selectedProjectId === project.id ? "opacity-100" : "opacity-0",
+                    selectedProjectId === project.id
+                      ? "opacity-100"
+                      : "opacity-0",
                   )}
                 />
                 {project.name}

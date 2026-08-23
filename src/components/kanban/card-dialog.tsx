@@ -20,6 +20,7 @@ import {
   type Project,
 } from "@/lib/board/types";
 import { cn } from "@/lib/utils";
+import { ProjectSelect } from "./project-select";
 import { TagChip } from "./tag-chip";
 
 export type CardDraft = {
@@ -59,7 +60,6 @@ export function CardDialog({
   const [tagDraft, setTagDraft] = useState("");
   const [columnId, setColumnId] = useState<ColumnId>(initial.columnId);
   const [projectId, setProjectId] = useState(initial.projectId);
-  const [newProject, setNewProject] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
 
@@ -72,7 +72,6 @@ export function CardDialog({
     setTagDraft("");
     setColumnId(initial.columnId);
     setProjectId(initial.projectId);
-    setNewProject("");
     setError(null);
     setUrlError(null);
   }, [open, initial]);
@@ -105,18 +104,13 @@ export function CardDialog({
       setUrlError("Use a web link, starting with http or https.");
       return;
     }
-    let nextProjectId = projectId || projects[0]?.id || "";
-    if (newProject.trim() && onCreateProject) {
-      const created = onCreateProject(newProject.trim());
-      if (created) nextProjectId = created;
-    }
     onSubmit({
       title: nextTitle,
       description: description.trim(),
       url: parsed.url,
       tags: uniqueTags([...tags, tagDraft]),
       columnId,
-      projectId: nextProjectId,
+      projectId: projectId || projects[0]?.id || "",
     });
     onOpenChange(false);
   }
@@ -131,7 +125,7 @@ export function CardDialog({
         <form onSubmit={handleSubmit} className="grid gap-5">
           <DialogHeader>
             <DialogTitle>
-              {mode === "create" ? "New card" : "Edit card"}
+              {mode === "create" ? "New task" : "Edit task"}
             </DialogTitle>
             <DialogDescription>
               {mode === "create"
@@ -199,17 +193,23 @@ export function CardDialog({
 
             <div className="grid gap-2">
               <Label htmlFor="card-tags">Tags</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map((tag) => (
-                  <TagChip
-                    key={tag.toLowerCase()}
-                    label={tag}
-                    onRemove={() =>
-                      setTags(tags.filter((item) => item.toLowerCase() !== tag.toLowerCase()))
-                    }
-                  />
-                ))}
-              </div>
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <TagChip
+                      key={tag.toLowerCase()}
+                      label={tag}
+                      onRemove={() =>
+                        setTags(
+                          tags.filter(
+                            (item) => item.toLowerCase() !== tag.toLowerCase(),
+                          ),
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              ) : null}
               <Input
                 id="card-tags"
                 value={tagDraft}
@@ -239,43 +239,24 @@ export function CardDialog({
               ) : null}
             </div>
 
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-fg">Project</legend>
-              <div className="flex flex-wrap gap-1.5 rounded-md bg-elevated p-1 shadow-[var(--shadow-border)]">
-                {projects.map((project) => {
-                  const selected = projectId === project.id;
-                  return (
-                    <button
-                      key={project.id}
-                      type="button"
-                      onClick={() => setProjectId(project.id)}
-                      className={cn(
-                        "flex h-11 min-w-0 flex-1 items-center justify-center rounded-sm px-3 text-sm font-medium transition-[background-color,color] duration-150 ease-out",
-                        selected
-                          ? "bg-surface text-fg shadow-[var(--shadow-border)]"
-                          : "text-muted hover:text-fg",
-                      )}
-                      aria-pressed={selected}
-                    >
-                      <span className="truncate">{project.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {onCreateProject ? (
-                <Input
-                  value={newProject}
-                  onChange={(event) => setNewProject(event.target.value)}
-                  placeholder="Or add a project"
-                  maxLength={32}
-                  aria-label="New project name"
-                />
-              ) : null}
-            </fieldset>
+            <div className="grid gap-2">
+              <Label htmlFor="card-project">Project</Label>
+              <ProjectSelect
+                id="card-project"
+                projects={projects}
+                value={projectId}
+                onChange={setProjectId}
+                onCreate={onCreateProject}
+              />
+            </div>
 
-            <fieldset className="grid gap-2">
-              <legend className="text-sm font-medium text-fg">Column</legend>
-              <div className="grid grid-cols-3 gap-1.5 rounded-md bg-elevated p-1 shadow-[var(--shadow-border)]">
+            <div className="grid gap-2">
+              <Label id="card-column-label">Column</Label>
+              <div
+                className="grid grid-cols-3 gap-1.5 rounded-md bg-elevated p-1 shadow-[var(--shadow-border)]"
+                role="group"
+                aria-labelledby="card-column-label"
+              >
                 {COLUMN_IDS.map((id) => {
                   const selected = columnId === id;
                   return (
@@ -296,7 +277,7 @@ export function CardDialog({
                   );
                 })}
               </div>
-            </fieldset>
+            </div>
           </div>
 
           <DialogFooter>
@@ -308,7 +289,7 @@ export function CardDialog({
               Cancel
             </Button>
             <Button type="submit">
-              {mode === "create" ? "Add card" : "Save changes"}
+              {mode === "create" ? "Add task" : "Save changes"}
             </Button>
           </DialogFooter>
         </form>

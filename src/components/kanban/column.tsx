@@ -50,7 +50,7 @@ export function KanbanColumn({
         "transition-[box-shadow,background-color] duration-150 ease-[var(--ease-smooth-out)]",
         isOver && "bg-elevated/80 ring-1 ring-primary/70",
       )}
-      aria-label={`${meta.label}${projectName ? `, ${projectName}` : ""}, ${cards.length} ${cards.length === 1 ? "card" : "cards"}`}
+      aria-label={`${meta.label}${projectName ? `, ${projectName}` : ""}, ${cards.length} ${cards.length === 1 ? "task" : "tasks"}`}
     >
       <header className="flex items-center gap-2 px-1.5 pt-1 pb-2 md:px-2 md:pt-1.5">
         <span
@@ -58,19 +58,8 @@ export function KanbanColumn({
           aria-hidden="true"
         />
         <div className="min-w-0 flex-1">
-          {projectName ? (
-            <>
-              <p className="text-xs font-medium tracking-wide text-muted uppercase">
-                {meta.label}
-              </p>
-              <h2 className="truncate text-sm font-medium text-fg">{projectName}</h2>
-            </>
-          ) : (
-            <>
-              <h2 className="text-sm font-medium text-fg">{meta.label}</h2>
-              <p className="hidden text-xs text-subtle sm:block">{meta.hint}</p>
-            </>
-          )}
+          <h2 className="text-sm font-medium text-fg">{meta.label}</h2>
+          <p className="hidden text-xs text-subtle sm:block">{meta.hint}</p>
         </div>
         <span
           className="rounded-full bg-elevated px-2 py-0.5 text-xs font-medium text-muted tabular-nums"
@@ -91,7 +80,7 @@ export function KanbanColumn({
 
       <div
         ref={setNodeRef}
-        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-0.5 pb-1"
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-0.5 py-1"
       >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (

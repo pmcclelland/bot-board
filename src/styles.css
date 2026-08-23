@@ -30,7 +30,7 @@
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-column: 1.25rem;
-  --radius-dialog: 2rem;
+  --radius-dialog: 1rem;
 
   --shadow-border: 0 0 0 1px rgb(255 255 255 / 0.1);
   --shadow-border-hover: 0 0 0 1px rgb(47 211 196 / 0.35);
@@ -102,6 +102,26 @@
     flex: 0 0 100%;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+  }
+
+  .dialog-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(243 240 232 / 0.22) transparent;
+  }
+
+  .dialog-scroll::-webkit-scrollbar {
+    width: 0.5rem;
+  }
+
+  .dialog-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dialog-scroll::-webkit-scrollbar-thumb {
+    background-color: rgb(243 240 232 / 0.22);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 }
 

@@ -3,3 +3,9 @@ node_modules/
 .github_repo
 .env
 .env.*
+
+# Local Vercel/Nitro build output (Vercel builds from source)
+.vercel/
+
+# Session QA screenshots (keep product shots in screenshots/)
+screenshots/auth-*.png

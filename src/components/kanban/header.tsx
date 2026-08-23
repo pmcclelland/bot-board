@@ -1,4 +1,5 @@
-import { MoreHorizontal, Plus, RotateCcw } from "lucide-react";
+import { KeyRound, Plus } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,14 +7,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signOut } from "@/lib/auth/client";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
 import { BotMark } from "./bot-mark";
+import { useState } from "react";
 
 type BoardHeaderProps = {
   onAdd: () => void;
-  onReset: () => void;
 };
 
-export function BoardHeader({ onAdd, onReset }: BoardHeaderProps) {
+export function BoardHeader({ onAdd }: BoardHeaderProps) {
+  const user = useCurrentUser();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+  const label = user?.displayName ?? user?.primaryEmail ?? "Account";
+
   return (
     <header className="flex items-center justify-between gap-3 px-0.5 md:px-1">
       <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 md:gap-x-3">
@@ -39,24 +47,53 @@ export function BoardHeader({ onAdd, onReset }: BoardHeaderProps) {
         >
           <Plus className="size-4" />
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Board actions"
-              className="text-muted"
-            >
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={onReset}>
-              <RotateCcw className="size-4" />
-              Restore sample board
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Account menu"
+                className="overflow-hidden"
+              >
+                {user.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt=""
+                    className="size-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="grid size-8 place-items-center rounded-full bg-elevated text-sm font-medium text-fg">
+                    {label.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2.5 py-2">
+                <p className="truncate text-sm font-medium text-fg">{label}</p>
+                {user.primaryEmail ? (
+                  <p className="truncate text-xs text-subtle">{user.primaryEmail}</p>
+                ) : null}
+              </div>
+              <DropdownMenuItem onSelect={() => navigate({ to: "/settings" })}>
+                <KeyRound className="size-4" />
+                API tokens
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={signingOut}
+                onSelect={() => {
+                  setSigningOut(true);
+                  void signOut().catch(() => setSigningOut(false));
+                }}
+              >
+                {signingOut ? "Signing out…" : "Log out"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="size-8 animate-pulse rounded-full bg-elevated" />
+        )}
       </div>
     </header>
   );

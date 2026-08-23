@@ -21,8 +21,11 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { RedirectToSignIn } from "@/lib/auth/gates";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +36,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  createTaskFn,
+  deleteTaskFn,
+  loadBoardFn,
+  moveTaskFn,
+  updateTaskFn,
+} from "@/lib/board/server-fns";
+import { snapshotToState } from "@/lib/board/snapshot";
 import { useBoardStore } from "@/lib/board/store";
 import { cardMatches, collectTags } from "@/lib/board/card-fields";
 import {
@@ -78,24 +89,31 @@ function listsEqual(a: string[], b: string[]) {
 }
 
 export function KanbanBoard() {
+  const { user, isPending } = useCurrentUserState();
+  const queryClient = useQueryClient();
   const cards = useBoardStore((s) => s.cards);
   const columns = useBoardStore((s) => s.columns);
   const projects = useBoardStore((s) => s.projects);
-  const addCard = useBoardStore((s) => s.addCard);
-  const updateCard = useBoardStore((s) => s.updateCard);
-  const deleteCard = useBoardStore((s) => s.deleteCard);
-  const moveCard = useBoardStore((s) => s.moveCard);
+  const hasHydrated = useBoardStore((s) => s.hasHydrated);
   const setColumns = useBoardStore((s) => s.setColumns);
   const findColumn = useBoardStore((s) => s.findColumn);
   const addProject = useBoardStore((s) => s.addProject);
-  const resetBoard = useBoardStore((s) => s.resetBoard);
+  const hydrate = useBoardStore((s) => s.hydrate);
+
+  const boardQuery = useQuery({
+    queryKey: ["board"],
+    queryFn: () => loadBoardFn(),
+    enabled: Boolean(user),
+  });
 
   useEffect(() => {
-    const result = useBoardStore.persist.rehydrate();
-    void Promise.resolve(result).finally(() => {
-      useBoardStore.setState({ hasHydrated: true });
-    });
-  }, []);
+    if (!boardQuery.data) return;
+    hydrate(snapshotToState(boardQuery.data));
+  }, [boardQuery.data, hydrate]);
+
+  function refreshBoard() {
+    void queryClient.invalidateQueries({ queryKey: ["board"] });
+  }
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [dialog, setDialog] = useState<{
@@ -112,7 +130,7 @@ export function KanbanBoard() {
       url: "",
       tags: [],
       columnId: "todo",
-      projectId: "p-cairn",
+      projectId: "",
     },
   });
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -214,32 +232,45 @@ export function KanbanBoard() {
     });
   }, []);
 
-  function handleDialogSubmit(draft: CardDraft) {
-    if (dialog.mode === "create") {
-      addCard(draft);
-      toast("Card added", {
-        description: `Placed in ${COLUMN_META[draft.columnId].label}.`,
-      });
-      return;
-    }
-    if (dialog.cardId) {
-      updateCard(dialog.cardId, draft);
-      toast("Card updated");
+  async function handleDialogSubmit(draft: CardDraft) {
+    try {
+      if (dialog.mode === "create") {
+        await createTaskFn({ data: draft });
+        toast("Task added", {
+          description: `Placed in ${COLUMN_META[draft.columnId].label}.`,
+        });
+      } else if (dialog.cardId) {
+        await updateTaskFn({ data: { id: dialog.cardId, ...draft } });
+        toast("Task updated");
+      }
+      refreshBoard();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save task");
     }
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!pendingDelete) return;
-    deleteCard(pendingDelete);
-    toast("Card deleted");
-    setPendingDelete(null);
+    try {
+      await deleteTaskFn({ data: { id: pendingDelete } });
+      toast("Task deleted");
+      setPendingDelete(null);
+      refreshBoard();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete task");
+    }
   }
 
-  function handleMove(id: string, columnId: ColumnId) {
-    moveCard(id, columnId);
-    toast("Card moved", {
-      description: `Now in ${COLUMN_META[columnId].label}.`,
-    });
+  async function handleMove(id: string, columnId: ColumnId) {
+    try {
+      await moveTaskFn({ data: { id, columnId } });
+      toast("Task moved", {
+        description: `Now in ${COLUMN_META[columnId].label}.`,
+      });
+      refreshBoard();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not move task");
+    }
   }
 
   function toggleTag(tag: string) {
@@ -323,7 +354,10 @@ export function KanbanBoard() {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveId(null);
-    if (!over) return;
+    if (!over) {
+      refreshBoard();
+      return;
+    }
 
     const activeIdStr = String(active.id);
     const overId = String(over.id);
@@ -339,29 +373,73 @@ export function KanbanBoard() {
       const newIndex = columnFromDroppable(overId)
         ? items.length - 1
         : items.indexOf(overId);
-      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+        void persistDrag(activeIdStr);
+        return;
+      }
       setColumns({
         ...current,
         [from]: arrayMove(items, oldIndex, newIndex),
       });
     }
+    void persistDrag(activeIdStr);
   }
 
   function handleDragCancel() {
     setActiveId(null);
   }
 
+  async function persistDrag(id: string) {
+    const columnId = findColumn(id);
+    if (!columnId) return;
+    const lane = useBoardStore.getState().columns[columnId];
+    const index = lane.indexOf(id);
+    const beforeId = index >= 0 && index < lane.length - 1 ? lane[index + 1] : null;
+    try {
+      await moveTaskFn({ data: { id, columnId, beforeId } });
+      refreshBoard();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not move task");
+      refreshBoard();
+    }
+  }
+
+  if (isPending) {
+    return (
+      <div className="board-shell flex h-dvh items-center justify-center bg-background text-muted">
+        Loading…
+      </div>
+    );
+  }
+  if (!user) return <RedirectToSignIn />;
+  if (boardQuery.isPending && !hasHydrated) {
+    return (
+      <div className="board-shell flex h-dvh items-center justify-center bg-background text-muted">
+        Loading board…
+      </div>
+    );
+  }
+  if (boardQuery.isError && !hasHydrated) {
+    return (
+      <div className="board-shell grid h-dvh place-items-center bg-background px-4 text-fg">
+        <div className="max-w-sm space-y-3 text-center">
+          <p className="text-sm text-muted">Could not load the board.</p>
+          <button
+            type="button"
+            className="text-sm text-primary hover:underline"
+            onClick={() => refreshBoard()}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="board-shell flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 px-3 py-3 md:gap-6 md:px-8 md:py-8">
-        <BoardHeader
-          onAdd={() => openCreate(activeLane)}
-          onReset={() => {
-            resetBoard();
-            clearFilters();
-            toast("Sample board restored");
-          }}
-        />
+        <BoardHeader onAdd={() => openCreate(activeLane)} />
 
         <BoardFilters
           query={query}

@@ -84,7 +84,7 @@ type CardDialogProps = {
   initial: CardDraft;
   suggestions: string[];
   projects: Project[];
-  onCreateProject?: (name: string) => string | null;
+  onCreateProject?: (name: string) => string | null | Promise<string | null>;
   onOpenChange: (open: boolean) => void;
   onSubmit: (draft: CardDraft) => void;
 };

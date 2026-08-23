@@ -1,10 +1,7 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import { FALLBACK_PROJECT_ID, normalizeCardFields, uniqueTags } from "./card-fields";
-import { SEED_CARDS, SEED_COLUMNS, SEED_PROJECTS } from "./seed";
+import { uniqueTags } from "./card-fields";
 import {
   COLUMN_IDS,
-  MAX_PROJECT_NAME,
   type Card,
   type CardInput,
   type ColumnId,
@@ -23,7 +20,11 @@ type BoardState = {
   columns: Columns;
   projects: Project[];
   hasHydrated: boolean;
-  setHasHydrated: (value: boolean) => void;
+  hydrate: (next: {
+    cards: Record<string, Card>;
+    columns: Columns;
+    projects: Project[];
+  }) => void;
   addCard: (input: CardInput) => string;
   updateCard: (id: string, input: CardInput) => void;
   deleteCard: (id: string) => void;
@@ -32,10 +33,7 @@ type BoardState = {
   relocateCard: (id: string, next: Relocate) => void;
   setColumns: (columns: Columns) => void;
   findColumn: (id: string) => ColumnId | null;
-  addProject: (name: string) => string | null;
-  renameProject: (id: string, name: string) => void;
-  deleteProject: (id: string) => void;
-  resetBoard: () => void;
+  addProject: (name: string) => Promise<string | null>;
 };
 
 function stamp() {
@@ -90,14 +88,12 @@ function insertCard(
   return [...target.slice(0, insertAt), cardId, ...target.slice(insertAt)];
 }
 
-export const useBoardStore = create<BoardState>()(
-  persist(
-    (set, get) => ({
-      cards: SEED_CARDS,
-      columns: SEED_COLUMNS,
-      projects: SEED_PROJECTS,
+export const useBoardStore = create<BoardState>()((set, get) => ({
+      cards: {},
+      columns: { todo: [], doing: [], done: [] },
+      projects: [],
       hasHydrated: false,
-      setHasHydrated: (value) => set({ hasHydrated: value }),
+      hydrate: (next) => set({ ...next, hasHydrated: true }),
       addCard: ({ title, description, url, tags, columnId, projectId }) => {
         const id = newId("c");
         const at = stamp();
@@ -244,90 +240,14 @@ export const useBoardStore = create<BoardState>()(
         }
         return columnOf(get().columns, id);
       },
-      addProject: (name) => {
-        const trimmed = name.trim().slice(0, MAX_PROJECT_NAME);
-        if (!trimmed) return null;
-        const exists = get().projects.some(
-          (project) => project.name.toLowerCase() === trimmed.toLowerCase(),
-        );
-        if (exists) return null;
-        const id = newId("p");
+      addProject: async (name) => {
+        const { createProjectFn } = await import("./server-fns");
+        const project = await createProjectFn({ data: { name } });
         set((state) => ({
-          projects: [...state.projects, { id, name: trimmed }],
+          projects: state.projects.some((item) => item.id === project.id)
+            ? state.projects
+            : [...state.projects, project],
         }));
-        return id;
+        return project.id;
       },
-      renameProject: (id, name) => {
-        const trimmed = name.trim().slice(0, MAX_PROJECT_NAME);
-        if (!trimmed) return;
-        set((state) => ({
-          projects: state.projects.map((project) =>
-            project.id === id ? { ...project, name: trimmed } : project,
-          ),
-        }));
-      },
-      deleteProject: (id) => {
-        const state = get();
-        if (state.projects.length <= 1) return;
-        const fallback = state.projects.find((project) => project.id !== id);
-        if (!fallback) return;
-        const cards = Object.fromEntries(
-          Object.entries(state.cards).map(([cardId, card]) => [
-            cardId,
-            card.projectId === id ? { ...card, projectId: fallback.id } : card,
-          ]),
-        );
-        set({
-          projects: state.projects.filter((project) => project.id !== id),
-          cards,
-        });
-      },
-      resetBoard: () =>
-        set({
-          cards: structuredClone(SEED_CARDS),
-          columns: structuredClone(SEED_COLUMNS),
-          projects: structuredClone(SEED_PROJECTS),
-        }),
-    }),
-    {
-      name: "cairn-board-v1",
-      version: 3,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        cards: state.cards,
-        columns: state.columns,
-        projects: state.projects,
-      }),
-      migrate: (persisted) => {
-        const state = persisted as {
-          cards?: Record<string, Card>;
-          columns?: Columns;
-          projects?: Project[];
-        };
-        const projects =
-          state.projects && state.projects.length > 0
-            ? state.projects.map((project) => ({
-                id: project.id,
-                name: String(project.name ?? "Project").slice(0, MAX_PROJECT_NAME),
-              }))
-            : [{ id: FALLBACK_PROJECT_ID, name: "Inbox" }];
-        const known = new Set(projects.map((project) => project.id));
-        const fallback = projects[0]?.id ?? FALLBACK_PROJECT_ID;
-        const cards = Object.fromEntries(
-          Object.entries(state.cards ?? {}).map(([id, card]) => {
-            const next = normalizeCardFields(card, fallback);
-            if (next.projectId && !known.has(next.projectId)) {
-              next.projectId = fallback;
-            }
-            return [id, next];
-          }),
-        );
-        return { ...state, cards, projects };
-      },
-      skipHydration: true,
-      onRehydrateStorage: () => () => {
-        useBoardStore.setState({ hasHydrated: true });
-      },
-    },
-  ),
-);
+}));

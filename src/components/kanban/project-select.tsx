@@ -13,7 +13,7 @@ type ProjectSelectProps = {
   projects: Project[];
   value: string;
   onChange: (id: string) => void;
-  onCreate?: (name: string) => string | null;
+  onCreate?: (name: string) => string | null | Promise<string | null>;
 };
 
 export function ProjectSelect({
@@ -46,9 +46,9 @@ export function ProjectSelect({
     setOpen(false);
   }
 
-  function createFromQuery() {
+  async function createFromQuery() {
     if (!canCreate || !onCreate) return;
-    const created = onCreate(trimmed);
+    const created = await onCreate(trimmed);
     if (created) choose(created);
   }
 

@@ -101,14 +101,13 @@ export const useBoardStore = create<BoardState>()(
       addCard: ({ title, description, url, tags, columnId, projectId }) => {
         const id = newId("c");
         const at = stamp();
-        const fallback = get().projects[0]?.id ?? FALLBACK_PROJECT_ID;
         const card: Card = {
           id,
           title: title.trim(),
           description: description.trim(),
           url,
           tags: uniqueTags(tags),
-          projectId: projectId || fallback,
+          projectId: projectId.trim(),
           createdAt: at,
           updatedAt: at,
         };
@@ -132,7 +131,7 @@ export const useBoardStore = create<BoardState>()(
         const existing = state.cards[id];
         if (!existing) return;
         const from = columnOf(state.columns, id);
-        const nextProject = projectId || existing.projectId;
+        const nextProject = projectId.trim();
         let columns = state.columns;
         if (from && (from !== columnId || existing.projectId !== nextProject)) {
           const without = {
@@ -198,7 +197,12 @@ export const useBoardStore = create<BoardState>()(
         const existing = state.cards[id];
         const from = columnOf(state.columns, id);
         if (!existing || !from) return;
-        if (!state.projects.some((project) => project.id === projectId)) return;
+        if (
+          projectId &&
+          !state.projects.some((project) => project.id === projectId)
+        ) {
+          return;
+        }
 
         const nextColumns: Columns = { ...state.columns };
         if (from !== columnId) {
@@ -312,7 +316,9 @@ export const useBoardStore = create<BoardState>()(
         const cards = Object.fromEntries(
           Object.entries(state.cards ?? {}).map(([id, card]) => {
             const next = normalizeCardFields(card, fallback);
-            if (!known.has(next.projectId)) next.projectId = fallback;
+            if (next.projectId && !known.has(next.projectId)) {
+              next.projectId = fallback;
+            }
             return [id, next];
           }),
         );

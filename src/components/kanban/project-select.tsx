@@ -93,7 +93,7 @@ export function ProjectSelect({
           )}
         >
           <span className={cn("truncate", !selected && "text-subtle")}>
-            {selected?.name ?? "Select a project"}
+            {selected?.name ?? "No project"}
           </span>
           <ChevronDown className="size-4 shrink-0 text-subtle" />
         </button>
@@ -117,6 +117,23 @@ export function ProjectSelect({
           aria-label="Projects"
           className="mt-1 max-h-52 overflow-y-auto"
         >
+          {!trimmed ? (
+            <button
+              type="button"
+              role="option"
+              aria-selected={!value}
+              onClick={() => choose("")}
+              className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-2.5 text-left text-sm outline-none transition-[background-color] duration-150 ease-out hover:bg-elevated focus-visible:bg-elevated"
+            >
+              <Check
+                className={cn(
+                  "size-4 shrink-0",
+                  value ? "opacity-0" : "opacity-100",
+                )}
+              />
+              <span className="truncate text-muted">No project</span>
+            </button>
+          ) : null}
           {matches.map((project) => {
             const selectedProject = project.id === value;
             return (

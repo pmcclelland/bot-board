@@ -36,6 +36,19 @@ describe("parseUrl", () => {
     assert.equal(parseUrl("javascript:alert(1)").ok, false);
     assert.equal(parseUrl("data:text/html,hi").ok, false);
   });
+
+  it("rejects strings that are not a web host", () => {
+    assert.equal(parseUrl("notaurl").ok, false);
+    assert.equal(parseUrl("http://notaurl").ok, false);
+    assert.equal(parseUrl("not a url").ok, false);
+    assert.equal(parseUrl("https://.com").ok, false);
+  });
+
+  it("accepts localhost, ipv4, and domains with a tld", () => {
+    assert.equal(parseUrl("localhost:8080").ok, true);
+    assert.equal(parseUrl("127.0.0.1").ok, true);
+    assert.equal(parseUrl("https://github.com/org/repo").ok, true);
+  });
 });
 
 describe("uniqueTags", () => {

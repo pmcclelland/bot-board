@@ -21,12 +21,25 @@ export function uniqueTags(tags: string[], limit = MAX_TAGS) {
   return next;
 }
 
+const IPV4 =
+  /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
+const DOMAIN =
+  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+function isWebHost(hostname: string) {
+  if (!hostname) return false;
+  if (hostname === "localhost") return true;
+  if (IPV4.test(hostname)) return true;
+  return DOMAIN.test(hostname);
+}
+
 export function parseUrl(input: string): { ok: true; url: string } | { ok: false } {
   const trimmed = input.trim();
   if (!trimmed) return { ok: true, url: "" };
+  if (/\s/.test(trimmed)) return { ok: false };
 
   let candidate = trimmed;
-  if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(candidate)) {
+  if (!/^https?:\/\//i.test(candidate)) {
     candidate = `https://${candidate}`;
   }
 
@@ -35,6 +48,7 @@ export function parseUrl(input: string): { ok: true; url: string } | { ok: false
     if (url.protocol !== "http:" && url.protocol !== "https:") {
       return { ok: false };
     }
+    if (!isWebHost(url.hostname)) return { ok: false };
     return { ok: true, url: url.toString() };
   } catch {
     return { ok: false };
@@ -83,8 +97,8 @@ export function normalizeCardFields(
 ): Card {
   const parsed = parseUrl(typeof card.url === "string" ? card.url : "");
   const projectId =
-    typeof card.projectId === "string" && card.projectId.trim()
-      ? card.projectId
+    typeof card.projectId === "string"
+      ? card.projectId.trim()
       : fallbackProjectId;
   return {
     id: card.id,

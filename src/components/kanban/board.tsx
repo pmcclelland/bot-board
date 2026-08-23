@@ -172,7 +172,6 @@ export function KanbanBoard() {
     visibleLists.todo.length + visibleLists.doing.length + visibleLists.done.length;
   const activeCard = activeId ? cards[String(activeId)] : undefined;
   const pendingCard = pendingDelete ? cards[pendingDelete] : undefined;
-  const defaultProjectId = projects[0]?.id ?? "";
   const selectedProjectName = selectedProjectId
     ? projects.find((project) => project.id === selectedProjectId)?.name ?? null
     : null;
@@ -189,11 +188,11 @@ export function KanbanBoard() {
           url: "",
           tags: [],
           columnId,
-          projectId: selectedProjectId ?? defaultProjectId,
+          projectId: selectedProjectId ?? "",
         },
       });
     },
-    [activeLane, defaultProjectId, selectedProjectId],
+    [activeLane, selectedProjectId],
   );
 
   const openEdit = useCallback((id: string) => {
@@ -210,10 +209,10 @@ export function KanbanBoard() {
         url: card.url ?? "",
         tags: card.tags ?? [],
         columnId,
-        projectId: card.projectId ?? defaultProjectId,
+        projectId: card.projectId ?? "",
       },
     });
-  }, [defaultProjectId]);
+  }, []);
 
   function handleDialogSubmit(draft: CardDraft) {
     if (dialog.mode === "create") {

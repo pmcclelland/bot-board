@@ -119,7 +119,7 @@ export function KanbanCardView({
 
           {card.assignee ? (
             <div className="mt-2">
-              <p className="text-xs font-medium text-muted">Assignee</p>
+              <p className="text-xs font-medium text-fg">Assignee</p>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button

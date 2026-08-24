@@ -101,8 +101,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
       addCard: ({ title, description, url, tags, columnId, projectId, assigneeId }) => {
         const id = newId("c");
         const at = stamp();
-        const assignee =
-          get().people.find((person) => person.userId === assigneeId)?.name ?? "";
+        const person = get().people.find((item) => item.userId === assigneeId);
         const card: Card = {
           id,
           title: title.trim(),
@@ -115,7 +114,8 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
           createdBy: "",
           creator: "",
           assigneeId: assigneeId.trim(),
-          assignee,
+          assignee: person?.name ?? "",
+          assigneeImage: person?.image ?? null,
         };
         set((state) => ({
           cards: { ...state.cards, [id]: card },
@@ -136,6 +136,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
         const state = get();
         const existing = state.cards[id];
         if (!existing) return;
+        const person = get().people.find((item) => item.userId === assigneeId.trim());
         const from = columnOf(state.columns, id);
         const nextProject = projectId.trim();
         let columns = state.columns;
@@ -167,9 +168,8 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
               tags: uniqueTags(tags),
               projectId: nextProject,
               assigneeId: assigneeId.trim(),
-              assignee:
-                get().people.find((person) => person.userId === assigneeId.trim())
-                  ?.name ?? "",
+              assignee: person?.name ?? "",
+              assigneeImage: person?.image ?? null,
               updatedAt: stamp(),
             },
           },

@@ -113,5 +113,6 @@ export function normalizeCardFields(
     creator: card.creator ?? "",
     assigneeId: card.assigneeId ?? "",
     assignee: card.assignee ?? "",
+    assigneeImage: card.assigneeImage ?? null,
   };
 }

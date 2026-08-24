@@ -21,6 +21,7 @@ function card(partial: Partial<Card> & Pick<Card, "id" | "title">): Card {
     creator: "",
     assigneeId: "",
     assignee: "",
+    assigneeImage: null,
     ...partial,
   };
 }

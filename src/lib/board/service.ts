@@ -27,6 +27,7 @@ export type TaskRow = {
   creator: string;
   assigneeId: string;
   assignee: string;
+  assigneeImage: string | null;
   updatedBy: string;
 };
 
@@ -90,6 +91,7 @@ type TaskSql = {
   assignee_id: string | null;
   creator_name: string | null;
   assignee_name: string | null;
+  assignee_image: string | null;
 };
 
 function displayName(name: string | null | undefined, email?: string | null) {
@@ -116,6 +118,7 @@ function mapTask(row: TaskSql): TaskRow {
     creator: displayName(row.creator_name) || "Unknown",
     assigneeId: row.assignee_id ?? "",
     assignee: displayName(row.assignee_name),
+    assigneeImage: row.assignee_image,
     updatedBy: row.updated_by,
   };
 }
@@ -124,7 +127,7 @@ const TASK_SELECT = `
   select
     t.id, t.title, t.description, t.url, t.tags, t.project_id, t.column_id, t.position,
     t.created_at, t.updated_at, t.created_by, t.updated_by, t.assignee_id,
-    c.name as creator_name, a.name as assignee_name
+    c.name as creator_name, a.name as assignee_name, a.image as assignee_image
   from tasks t
   left join members c on c.user_id = t.created_by
   left join members a on a.user_id = t.assignee_id
@@ -132,14 +135,20 @@ const TASK_SELECT = `
 
 export async function listPeople(): Promise<Person[]> {
   const sql = await getSql();
-  const rows = await sql<{ user_id: string; name: string; email: string }>`
-    select user_id, name, email from members
+  const rows = await sql<{
+    user_id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  }>`
+    select user_id, name, email, image from members
     where status = 'approved'
     order by lower(name), created_at
   `;
   return rows.map((row) => ({
     userId: row.user_id,
     name: displayName(row.name, row.email) || "Unknown",
+    image: row.image,
   }));
 }
 

@@ -8,7 +8,6 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  UserRound,
 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type Ref } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { linkLabel, parseUrl } from "@/lib/board/card-fields";
 import {
   COLUMN_IDS,
@@ -82,7 +86,7 @@ export function KanbanCardView({
   return (
     <article
       className={cn(
-        "group rounded-md bg-card p-3 shadow-[var(--shadow-card)]",
+        "group flex flex-col rounded-md bg-card p-3 shadow-[var(--shadow-card)]",
         "transition-[box-shadow,opacity,transform] duration-150 ease-[var(--ease-smooth-out)]",
         "hover:shadow-[var(--shadow-border-hover)]",
         canDrag && "cursor-grab active:cursor-grabbing",
@@ -167,28 +171,6 @@ export function KanbanCardView({
               ))}
             </div>
           ) : null}
-
-          {card.assignee ? (
-            <p className="mt-2 flex min-w-0 items-center gap-1.5 text-xs text-fg">
-              <UserRound className="size-3.5 shrink-0 text-muted" />
-              <span className="truncate">{card.assignee}</span>
-            </p>
-          ) : null}
-
-          {card.creator || stamped ? (
-            <p
-              className={cn(
-                "text-xs text-subtle",
-                card.assignee ? "mt-1.5" : "mt-2",
-              )}
-            >
-              {card.creator ? `by ${card.creator}` : null}
-              {card.creator && stamped ? " · " : null}
-              {stamped ? (
-                <span className="tabular-nums">{stamped}</span>
-              ) : null}
-            </p>
-          ) : null}
         </div>
 
         <DropdownMenu>
@@ -231,7 +213,37 @@ export function KanbanCardView({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {card.assignee ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="mt-0.5 grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated text-xs font-medium text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+                aria-label={card.assignee}
+                onPointerDown={stopDrag}
+                onTouchStart={stopDrag}
+              >
+                {card.assigneeImage ? (
+                  <img
+                    src={card.assigneeImage}
+                    alt=""
+                    className="size-8 rounded-full object-cover"
+                  />
+                ) : (
+                  card.assignee.charAt(0).toUpperCase()
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">{card.assignee}</TooltipContent>
+          </Tooltip>
+        ) : null}
       </div>
+      {stamped ? (
+        <p className="mt-2 self-end text-xs text-subtle tabular-nums">
+          {stamped}
+        </p>
+      ) : null}
     </article>
   );
 }

@@ -15,6 +15,7 @@ const unassigned = {
   creator: "",
   assigneeId: "",
   assignee: "",
+  assigneeImage: null,
 };
 
 export const SEED_CARDS: Record<string, Card> = {

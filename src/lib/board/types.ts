@@ -10,6 +10,7 @@ export type Project = {
 export type Person = {
   userId: string;
   name: string;
+  image: string | null;
 };
 
 export type Card = {
@@ -25,6 +26,7 @@ export type Card = {
   creator: string;
   assigneeId: string;
   assignee: string;
+  assigneeImage: string | null;
 };
 
 export type CardInput = {

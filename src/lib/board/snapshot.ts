@@ -46,5 +46,6 @@ function toCard(task: TaskRow): Card {
     creator: task.creator,
     assigneeId: task.assigneeId,
     assignee: task.assignee,
+    assigneeImage: task.assigneeImage,
   };
 }

@@ -3,13 +3,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { formatDistanceToNow } from "date-fns";
 import {
   ArrowRight,
-  GripVertical,
   Link2,
   MoreHorizontal,
   Pencil,
   Trash2,
 } from "lucide-react";
-import { useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type Ref } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -56,16 +55,12 @@ export function KanbanCardView({
   isDragging,
   selectedTags = [],
   dragDisabled,
-  handleProps,
   onEdit,
   onDelete,
   onMove,
   onToggleTag,
 }: KanbanCardProps & {
   isDragging?: boolean;
-  handleProps?: HTMLAttributes<HTMLButtonElement> & {
-    ref?: Ref<HTMLButtonElement>;
-  };
 }) {
   const [stamped, setStamped] = useState("");
   const href = parseUrl(card.url);
@@ -96,22 +91,6 @@ export function KanbanCardView({
       )}
     >
       <div className="flex items-start gap-1">
-        <button
-          type="button"
-          suppressHydrationWarning
-          className={cn(
-            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm text-subtle",
-            "transition-[color,background-color] duration-150 ease-out",
-            canDrag && "cursor-grab active:cursor-grabbing",
-            isOverlay && "cursor-grabbing",
-            dragDisabled && "cursor-default opacity-30",
-          )}
-          aria-label={`Reorder ${card.title}`}
-          {...handleProps}
-        >
-          <GripVertical className="size-4" />
-        </button>
-
         <div className="min-w-0 flex-1">
           <div
             role="button"
@@ -263,7 +242,6 @@ export function SortableKanbanCard({
     attributes,
     listeners,
     setNodeRef,
-    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
@@ -294,7 +272,7 @@ export function SortableKanbanCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...(dragDisabled ? {} : listeners)}
+      {...(dragDisabled ? {} : { ...listeners, ...attributes })}
       className={cn(isDragging && "z-10")}
     >
       <KanbanCardView
@@ -307,10 +285,6 @@ export function SortableKanbanCard({
         onDelete={onDelete}
         onMove={onMove}
         onToggleTag={onToggleTag}
-        handleProps={{
-          ref: setActivatorNodeRef,
-          ...attributes,
-        }}
       />
     </div>
   );

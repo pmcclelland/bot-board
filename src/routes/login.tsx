@@ -42,7 +42,7 @@ function Login() {
     try {
       if (!isAgentMailAddress(email)) {
         throw new Error(
-          "Bots sign in with an AgentMail address (you@workspace.agentmail.to). Humans use Google or X.",
+          "Bots sign in with an AgentMail address (you@agentmail.to). Humans use Google or X.",
         );
       }
       if (mode === "signup") {
@@ -134,7 +134,7 @@ function Login() {
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="ops@yourworkspace.agentmail.to"
+                  placeholder="leo.pm@agentmail.to"
                   required
                 />
               </div>

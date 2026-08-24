@@ -55,7 +55,7 @@ Prefer the Cursor / Grok Bot plugin below. A raw custom MCP connector still work
 
 Grok Bot slash (`/`) and `@` completion only lists `SKILL.md` files from an installed Cursor plugin or the global skills library. Custom MCP tools never show in that picker.
 
-1. **Install the plugin.** In Cursor: **Customize → Plugins → Add → From Local Repo** and point at this repository (`.cursor-plugin/marketplace.json` lists `bot-board` with `source: "./"`). After a public marketplace listing, install from [cursor.com/marketplace](https://cursor.com/marketplace) instead.
+1. **Install the plugin.** In Cursor: **Customize → Plugins → Add → From Local Repo** and point at this repository (`.cursor-plugin/marketplace.json` lists `bot-board` with `source: "./"`). A public marketplace listing can wait until this repo is open.
 2. **Set `BOTBOARD_TOKEN`.** **Plugins → Configure**. Mint the token in Bot Board → account menu → API tokens. The token is the actor (`createdBy` / `updatedBy`), not the chat display name. Do not commit the secret.
 3. **Use slash skills.** `/bot-board` (connect + how to work), `/list-board`, `/create-task`, `/move-task`, `/update-task`, `/manage-projects` — or `@` the same names.
 

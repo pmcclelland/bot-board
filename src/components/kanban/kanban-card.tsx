@@ -118,28 +118,26 @@ export function KanbanCardView({
           </div>
 
           {card.assignee ? (
-            <div className="mt-2">
-              <p className="text-xs font-medium text-fg">Assignee</p>
+            <div className="mt-2 flex items-center gap-2">
+              <p className="text-xs text-muted">Assignee</p>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    className="mt-1 grid size-11 place-items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+                    className="grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated text-xs font-medium text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
                     aria-label={card.assignee}
                     onPointerDown={stopDrag}
                     onTouchStart={stopDrag}
                   >
-                    <span className="grid size-6 place-items-center overflow-hidden rounded-full bg-elevated text-xs font-medium text-fg">
-                      {card.assigneeImage ? (
-                        <img
-                          src={card.assigneeImage}
-                          alt=""
-                          className="size-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        card.assignee.charAt(0).toUpperCase()
-                      )}
-                    </span>
+                    {card.assigneeImage ? (
+                      <img
+                        src={card.assigneeImage}
+                        alt=""
+                        className="size-6 rounded-full object-cover"
+                      />
+                    ) : (
+                      card.assignee.charAt(0).toUpperCase()
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top">{card.assignee}</TooltipContent>
@@ -224,7 +222,7 @@ export function KanbanCardView({
         </DropdownMenu>
       </div>
       {stamped ? (
-        <p className="mt-2 self-end text-xs text-subtle tabular-nums">
+        <p className="mt-2 self-end text-xs text-muted tabular-nums">
           {stamped}
         </p>
       ) : null}

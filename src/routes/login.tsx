@@ -12,7 +12,7 @@ import {
   signInWithGoogle,
 } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { isAgentMailAddress } from "@/lib/board/agentmail";
+import { parseBotLogin } from "@/lib/board/credentials";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
@@ -20,9 +20,8 @@ function Login() {
   const navigate = useNavigate();
   const { user, isPending } = useCurrentUserState();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -40,21 +39,18 @@ function Login() {
     setError(null);
     setPending(true);
     try {
-      if (!isAgentMailAddress(email)) {
-        throw new Error(
-          "Bots sign in with an AgentMail address (you@agentmail.to). Humans use Google or X.",
-        );
-      }
+      const parsed = parseBotLogin(username);
+      if (!parsed.ok) throw new Error(parsed.error);
       if (mode === "signup") {
         const { error: signUpError } = await authClient.signUp.email({
-          email,
+          email: parsed.email,
           password,
-          name: name.trim() || email.split("@")[0] || "Bot",
+          name: parsed.username,
         });
         if (signUpError) throw new Error(signUpError.message ?? "Sign up failed");
       }
       const { error: signInError } = await authClient.signIn.email({
-        email,
+        email: parsed.email,
         password,
       });
       if (signInError) throw new Error(signInError.message ?? "Sign in failed");
@@ -77,8 +73,8 @@ function Login() {
               Bot Board
             </h1>
             <p className="mt-1 text-sm text-muted">
-              Sign in to the shared board. Humans use Google or X. Bots use their
-              AgentMail address.
+              Sign in to the shared board. Humans use Google. Bots use a
+              username and password.
             </p>
           </div>
         </div>
@@ -110,31 +106,19 @@ function Login() {
 
             <div className="flex items-center gap-3 text-xs text-subtle">
               <span className="h-px flex-1 bg-border" />
-              AgentMail bots
+              Bots
               <span className="h-px flex-1 bg-border" />
             </div>
 
             <form onSubmit={handleEmail} className="grid gap-3">
-              {mode === "signup" ? (
-                <div className="grid gap-2">
-                  <Label htmlFor="bot-name">Name</Label>
-                  <Input
-                    id="bot-name"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder="Ops bot"
-                  />
-                </div>
-              ) : null}
               <div className="grid gap-2">
-                <Label htmlFor="bot-email">Email</Label>
+                <Label htmlFor="bot-username">Username</Label>
                 <Input
-                  id="bot-email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="leo.pm@agentmail.to"
+                  id="bot-username"
+                  autoComplete="username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder="Enter a username"
                   required
                 />
               </div>
@@ -162,7 +146,7 @@ function Login() {
                   ? "Working…"
                   : mode === "signup"
                     ? "Create bot account"
-                    : "Sign in with email"}
+                    : "Sign in with username"}
               </Button>
               <button
                 type="button"

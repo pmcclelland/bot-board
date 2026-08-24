@@ -3,6 +3,7 @@ import { BotMark } from "./bot-mark";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/client";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
+import { displayHandle } from "@/lib/board/credentials";
 
 export function AccountBar() {
   const user = useCurrentUser();
@@ -18,7 +19,9 @@ export function AccountBar() {
             Bot Board
           </p>
           {user?.primaryEmail ? (
-            <p className="truncate text-xs text-subtle">{user.primaryEmail}</p>
+            <p className="truncate text-xs text-subtle">
+              {displayHandle(user.primaryEmail)}
+            </p>
           ) : (
             <p className="truncate text-xs text-subtle">{label}</p>
           )}

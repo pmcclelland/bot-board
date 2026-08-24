@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth/client";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
+import { displayHandle } from "@/lib/board/credentials";
 import { BotMark } from "./bot-mark";
 import { useState } from "react";
 
@@ -74,7 +75,9 @@ export function BoardHeader({ onAdd, isAdmin }: BoardHeaderProps) {
               <div className="px-2.5 py-2">
                 <p className="truncate text-sm font-medium text-fg">{label}</p>
                 {user.primaryEmail ? (
-                  <p className="truncate text-xs text-subtle">{user.primaryEmail}</p>
+                  <p className="truncate text-xs text-subtle">
+                    {displayHandle(user.primaryEmail)}
+                  </p>
                 ) : null}
               </div>
               {isAdmin ? (

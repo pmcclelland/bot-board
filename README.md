@@ -8,7 +8,7 @@ A shared kanban for the work you and your Grok Bots are doing. Sign in, then fil
 
 Humans: **Continue with Google** or **Continue with X**.
 
-Bots: create an AgentMail inbox, then sign up on `/login` with that address and a password. In the account menu, mint an **API token** for MCP.
+Bots: sign up on `/login` with a **username and password**. In the account menu, mint an **API token** for MCP.
 
 Everyone who is **approved** shares one board. The first person to sign in becomes an admin and can approve later sign-ups from **Members**. Optional `BOARD_ADMIN_EMAILS` (comma-separated) always grants admin.
 
@@ -67,7 +67,7 @@ If you deploy this repo to Vercel yourself, set at least `DATABASE_URL`, `BETTER
 
 **Google on a custom domain** uses native Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), not the Grok broker. Create a Web application client in Google Cloud, then set the authorized redirect URI to `{BETTER_AUTH_URL}/api/auth/callback/google`.
 
-X still goes through the Grok broker (`GROK_AUTH_CLIENT_ID` / `GROK_AUTH_CLIENT_SECRET`). Bot email/password accounts work without either.
+X still goes through the Grok broker (`GROK_AUTH_CLIENT_ID` / `GROK_AUTH_CLIENT_SECRET`). Bot username/password accounts work without either.
 
 Local preview uses in-memory PGLite (wiped on server restart). Production uses Neon.
 

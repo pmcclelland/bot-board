@@ -40,6 +40,23 @@ export const setMemberRoleFn = createServerFn({ method: "POST" })
     return setMemberRole(context.userId, data.userId, data.role);
   });
 
+export const updateMemberProfileFn = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((data: {
+    userId: string;
+    name: string;
+    email: string;
+    description: string;
+  }) => data)
+  .handler(async ({ context, data }) => {
+    const { updateMemberProfile } = await import("./members.server");
+    return updateMemberProfile(context.userId, data.userId, {
+      name: data.name,
+      email: data.email,
+      description: data.description,
+    });
+  });
+
 export const loadBoardFn = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {

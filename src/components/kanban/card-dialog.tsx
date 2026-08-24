@@ -21,9 +21,11 @@ import {
   COLUMN_META,
   MAX_TAGS,
   type ColumnId,
+  type Person,
   type Project,
 } from "@/lib/board/types";
 import { cn } from "@/lib/utils";
+import { AssigneeSelect } from "./assignee-select";
 import { ProjectSelect } from "./project-select";
 import { TagChip } from "./tag-chip";
 
@@ -76,6 +78,8 @@ export type CardDraft = {
   tags: string[];
   columnId: ColumnId;
   projectId: string;
+  assigneeId: string;
+  creator?: string;
 };
 
 type CardDialogProps = {
@@ -84,6 +88,7 @@ type CardDialogProps = {
   initial: CardDraft;
   suggestions: string[];
   projects: Project[];
+  people: Person[];
   onCreateProject?: (name: string) => string | null | Promise<string | null>;
   onOpenChange: (open: boolean) => void;
   onSubmit: (draft: CardDraft) => void;
@@ -95,6 +100,7 @@ export function CardDialog({
   initial,
   suggestions,
   projects,
+  people,
   onCreateProject,
   onOpenChange,
   onSubmit,
@@ -106,6 +112,7 @@ export function CardDialog({
   const [tagDraft, setTagDraft] = useState("");
   const [columnId, setColumnId] = useState<ColumnId>(initial.columnId);
   const [projectId, setProjectId] = useState(initial.projectId);
+  const [assigneeId, setAssigneeId] = useState(initial.assigneeId);
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>(
     {},
   );
@@ -120,6 +127,7 @@ export function CardDialog({
     setTagDraft("");
     setColumnId(initial.columnId);
     setProjectId(initial.projectId);
+    setAssigneeId(initial.assigneeId);
     setTouched({});
     setSubmitted(false);
   }, [open, initial]);
@@ -178,6 +186,7 @@ export function CardDialog({
       tags: uniqueTags([...tags, tagDraft]),
       columnId,
       projectId: projectId.trim(),
+      assigneeId: assigneeId.trim(),
     });
     onOpenChange(false);
   }
@@ -201,8 +210,10 @@ export function CardDialog({
             </DialogTitle>
             <DialogDescription>
               {mode === "create"
-                ? "Name and describe the work. Link, tags, and project are optional."
-                : "Update the notes, link, tags, or move it to another lane."}
+                ? "Name and describe the work. Assignee, link, tags, and project are optional."
+                : initial.creator
+                  ? `Created by ${initial.creator}. Update the notes, assignee, or lane.`
+                  : "Update the notes, assignee, link, tags, or move it to another lane."}
             </DialogDescription>
           </DialogHeader>
 
@@ -246,6 +257,18 @@ export function CardDialog({
               <FieldError
                 id="card-description-error"
                 message={descriptionError}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <FieldLabel htmlFor="card-assignee" optional>
+                Assignee
+              </FieldLabel>
+              <AssigneeSelect
+                id="card-assignee"
+                people={people}
+                value={assigneeId}
+                onChange={setAssigneeId}
               />
             </div>
 

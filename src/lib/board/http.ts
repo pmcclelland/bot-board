@@ -44,6 +44,7 @@ export async function handleV1(request: Request): Promise<Response> {
           tags,
           columnId: str(body.columnId) || "todo",
           projectId: str(body.projectId),
+          assigneeId: str(body.assigneeId) || str(body.assignee) || undefined,
         }),
         201,
       );
@@ -65,6 +66,12 @@ export async function handleV1(request: Request): Promise<Response> {
           columnId: typeof body.columnId === "string" ? body.columnId : undefined,
           projectId:
             typeof body.projectId === "string" ? body.projectId : undefined,
+          assigneeId:
+            typeof body.assigneeId === "string"
+              ? body.assigneeId
+              : typeof body.assignee === "string"
+                ? body.assignee
+                : undefined,
         }),
       );
     }

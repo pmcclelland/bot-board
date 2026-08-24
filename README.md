@@ -41,7 +41,7 @@ All `/api/v1` routes need a session cookie or `Authorization: Bearer <token>`.
 
 Errors: `{ "error": string, "code"?: string }` with 401 / 404 / 422.
 
-Create body: `{ "title", "description", "columnId", "url?", "tags?", "projectId?" }`.
+Create body: `{ "title", "description", "columnId", "url?", "tags?", "projectId?", "assigneeId?" }`. `assignee` (member name) is also accepted. Tasks include `creator` and `assignee` names.
 
 ## MCP
 

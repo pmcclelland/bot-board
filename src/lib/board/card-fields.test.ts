@@ -17,6 +17,10 @@ function card(partial: Partial<Card> & Pick<Card, "id" | "title">): Card {
     projectId: "p-cairn",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
+    createdBy: "",
+    creator: "",
+    assigneeId: "",
+    assignee: "",
     ...partial,
   };
 }

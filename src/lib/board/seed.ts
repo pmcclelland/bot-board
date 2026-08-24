@@ -10,6 +10,13 @@ export const SEED_PROJECTS: Project[] = [
   { id: "p-personal", name: "Personal" },
 ];
 
+const unassigned = {
+  createdBy: "",
+  creator: "",
+  assigneeId: "",
+  assignee: "",
+};
+
 export const SEED_CARDS: Record<string, Card> = {
   c1: {
     id: "c1",
@@ -21,6 +28,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-launch",
     createdAt: iso(4),
     updatedAt: iso(2, 3),
+    ...unassigned,
   },
   c2: {
     id: "c2",
@@ -32,6 +40,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-cairn",
     createdAt: iso(5),
     updatedAt: iso(1, 6),
+    ...unassigned,
   },
   c3: {
     id: "c3",
@@ -42,6 +51,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-personal",
     createdAt: iso(2),
     updatedAt: iso(2),
+    ...unassigned,
   },
   c4: {
     id: "c4",
@@ -53,6 +63,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-launch",
     createdAt: iso(6),
     updatedAt: iso(0, 2),
+    ...unassigned,
   },
   c5: {
     id: "c5",
@@ -63,6 +74,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-cairn",
     createdAt: iso(1),
     updatedAt: iso(0, 5),
+    ...unassigned,
   },
   c6: {
     id: "c6",
@@ -73,6 +85,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-cairn",
     createdAt: iso(8),
     updatedAt: iso(3),
+    ...unassigned,
   },
   c7: {
     id: "c7",
@@ -83,6 +96,7 @@ export const SEED_CARDS: Record<string, Card> = {
     projectId: "p-cairn",
     createdAt: iso(7),
     updatedAt: iso(3, 4),
+    ...unassigned,
   },
 };
 

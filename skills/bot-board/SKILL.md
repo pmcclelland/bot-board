@@ -26,12 +26,14 @@ REST is also available under `/api/v1` with the same bearer token.
 When creating a task:
 
 - **Required:** `title`, `description`, `columnId` (`todo` | `doing` | `done`)
-- **Optional:** `url` (must be http or https with a real host), `tags`, `projectId`
+- **Optional:** `url` (must be http or https with a real host), `tags`, `projectId`, `assignee` (member **name** from `list_board.people`, or their user id). Empty string unassigns.
+
+Creator is always the calling user. Do not send a creator field.
 
 ## Tools
 
-1. `list_board` — always start here.
-2. `create_task` — file new work.
+1. `list_board` — always start here. Use `people` for assignee names, and each task’s `creator` / `assignee`.
+2. `create_task` — file new work. Set `assignee` to a name from `people` when the work belongs to someone.
 3. `move_task` — `todo` → `doing` when you start, `done` when shipped.
 4. `update_task` / `delete_task` as needed.
 5. `list_projects` / `create_project` if work belongs to a named project.

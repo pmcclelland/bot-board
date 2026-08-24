@@ -74,6 +74,7 @@ export const createTaskFn = createServerFn({ method: "POST" })
     tags?: string[];
     columnId: string;
     projectId?: string;
+    assigneeId?: string;
   }) => data)
   .handler(async ({ context, data }) => {
     await requireBoard(context.userId);
@@ -91,6 +92,7 @@ export const updateTaskFn = createServerFn({ method: "POST" })
     tags?: string[];
     columnId?: string;
     projectId?: string;
+    assigneeId?: string;
   }) => data)
   .handler(async ({ context, data }) => {
     await requireBoard(context.userId);

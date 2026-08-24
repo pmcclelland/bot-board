@@ -6,6 +6,7 @@ import {
   type CardInput,
   type ColumnId,
   type Columns,
+  type Person,
   type Project,
 } from "./types";
 
@@ -19,11 +20,13 @@ type BoardState = {
   cards: Record<string, Card>;
   columns: Columns;
   projects: Project[];
+  people: Person[];
   hasHydrated: boolean;
   hydrate: (next: {
     cards: Record<string, Card>;
     columns: Columns;
     projects: Project[];
+    people: Person[];
   }) => void;
   addCard: (input: CardInput) => string;
   updateCard: (id: string, input: CardInput) => void;
@@ -92,11 +95,14 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
       cards: {},
       columns: { todo: [], doing: [], done: [] },
       projects: [],
+      people: [],
       hasHydrated: false,
       hydrate: (next) => set({ ...next, hasHydrated: true }),
-      addCard: ({ title, description, url, tags, columnId, projectId }) => {
+      addCard: ({ title, description, url, tags, columnId, projectId, assigneeId }) => {
         const id = newId("c");
         const at = stamp();
+        const assignee =
+          get().people.find((person) => person.userId === assigneeId)?.name ?? "";
         const card: Card = {
           id,
           title: title.trim(),
@@ -106,6 +112,10 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
           projectId: projectId.trim(),
           createdAt: at,
           updatedAt: at,
+          createdBy: "",
+          creator: "",
+          assigneeId: assigneeId.trim(),
+          assignee,
         };
         set((state) => ({
           cards: { ...state.cards, [id]: card },
@@ -122,7 +132,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
         }));
         return id;
       },
-      updateCard: (id, { title, description, url, tags, columnId, projectId }) => {
+      updateCard: (id, { title, description, url, tags, columnId, projectId, assigneeId }) => {
         const state = get();
         const existing = state.cards[id];
         if (!existing) return;
@@ -156,6 +166,10 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
               url,
               tags: uniqueTags(tags),
               projectId: nextProject,
+              assigneeId: assigneeId.trim(),
+              assignee:
+                get().people.find((person) => person.userId === assigneeId.trim())
+                  ?.name ?? "",
               updatedAt: stamp(),
             },
           },

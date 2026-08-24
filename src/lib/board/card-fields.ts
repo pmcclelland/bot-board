@@ -109,5 +109,9 @@ export function normalizeCardFields(
     projectId,
     createdAt: card.createdAt ?? new Date().toISOString(),
     updatedAt: card.updatedAt ?? card.createdAt ?? new Date().toISOString(),
+    createdBy: card.createdBy ?? "",
+    creator: card.creator ?? "",
+    assigneeId: card.assigneeId ?? "",
+    assignee: card.assignee ?? "",
   };
 }

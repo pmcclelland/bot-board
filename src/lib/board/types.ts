@@ -7,6 +7,11 @@ export type Project = {
   name: string;
 };
 
+export type Person = {
+  userId: string;
+  name: string;
+};
+
 export type Card = {
   id: string;
   title: string;
@@ -16,6 +21,10 @@ export type Card = {
   projectId: string;
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
+  creator: string;
+  assigneeId: string;
+  assignee: string;
 };
 
 export type CardInput = {
@@ -25,6 +34,7 @@ export type CardInput = {
   tags: string[];
   columnId: ColumnId;
   projectId: string;
+  assigneeId: string;
 };
 
 export type Columns = Record<ColumnId, string[]>;

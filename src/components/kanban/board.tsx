@@ -95,6 +95,7 @@ export function KanbanBoard() {
   const cards = useBoardStore((s) => s.cards);
   const columns = useBoardStore((s) => s.columns);
   const projects = useBoardStore((s) => s.projects);
+  const people = useBoardStore((s) => s.people);
   const hasHydrated = useBoardStore((s) => s.hasHydrated);
   const setColumns = useBoardStore((s) => s.setColumns);
   const findColumn = useBoardStore((s) => s.findColumn);
@@ -132,6 +133,7 @@ export function KanbanBoard() {
       tags: [],
       columnId: "todo",
       projectId: "",
+      assigneeId: "",
     },
   });
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -208,6 +210,7 @@ export function KanbanBoard() {
           tags: [],
           columnId,
           projectId: selectedProjectId ?? "",
+          assigneeId: "",
         },
       });
     },
@@ -229,6 +232,8 @@ export function KanbanBoard() {
         tags: card.tags ?? [],
         columnId,
         projectId: card.projectId ?? "",
+        assigneeId: card.assigneeId ?? "",
+        creator: card.creator,
       },
     });
   }, []);
@@ -528,6 +533,7 @@ export function KanbanBoard() {
         initial={dialog.draft}
         suggestions={allTags}
         projects={projects}
+        people={people}
         onCreateProject={addProject}
         onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
         onSubmit={handleDialogSubmit}

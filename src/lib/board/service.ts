@@ -1,4 +1,5 @@
 import { getSql } from "@/lib/db";
+import { publicProfileEmail } from "./credentials";
 import { parseUrl, uniqueTags } from "./card-fields";
 import { validateCardForm } from "./card-form";
 import {
@@ -6,6 +7,7 @@ import {
   MAX_PROJECT_NAME,
   isColumnId,
   type ColumnId,
+  type Person,
   type Project,
 } from "./types";
 import type { Actor } from "./actor.server";
@@ -22,12 +24,16 @@ export type TaskRow = {
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  creator: string;
+  assigneeId: string;
+  assignee: string;
   updatedBy: string;
 };
 
 export type BoardSnapshot = {
   projects: Project[];
   tasks: TaskRow[];
+  people: Person[];
 };
 
 export class ServiceError extends Error {
@@ -68,7 +74,7 @@ function toIso(value: unknown): string {
   return String(value ?? "");
 }
 
-function mapTask(row: {
+type TaskSql = {
   id: string;
   title: string;
   description: string;
@@ -81,7 +87,20 @@ function mapTask(row: {
   updated_at: string | Date;
   created_by: string;
   updated_by: string;
-}): TaskRow {
+  assignee_id: string | null;
+  creator_name: string | null;
+  assignee_name: string | null;
+};
+
+function displayName(name: string | null | undefined, email?: string | null) {
+  const trimmed = (name ?? "").trim();
+  if (trimmed) return trimmed;
+  const publicEmail = publicProfileEmail(email ?? "");
+  if (publicEmail) return publicEmail;
+  return "";
+}
+
+function mapTask(row: TaskSql): TaskRow {
   return {
     id: row.id,
     title: row.title,
@@ -94,8 +113,53 @@ function mapTask(row: {
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
     createdBy: row.created_by,
+    creator: displayName(row.creator_name) || "Unknown",
+    assigneeId: row.assignee_id ?? "",
+    assignee: displayName(row.assignee_name),
     updatedBy: row.updated_by,
   };
+}
+
+const TASK_SELECT = `
+  select
+    t.id, t.title, t.description, t.url, t.tags, t.project_id, t.column_id, t.position,
+    t.created_at, t.updated_at, t.created_by, t.updated_by, t.assignee_id,
+    c.name as creator_name, a.name as assignee_name
+  from tasks t
+  left join members c on c.user_id = t.created_by
+  left join members a on a.user_id = t.assignee_id
+`;
+
+export async function listPeople(): Promise<Person[]> {
+  const sql = await getSql();
+  const rows = await sql<{ user_id: string; name: string; email: string }>`
+    select user_id, name, email from members
+    where status = 'approved'
+    order by lower(name), created_at
+  `;
+  return rows.map((row) => ({
+    userId: row.user_id,
+    name: displayName(row.name, row.email) || "Unknown",
+  }));
+}
+
+async function resolveAssigneeId(
+  value: string | undefined,
+): Promise<string | null | undefined> {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const people = await listPeople();
+  const byId = people.find((person) => person.userId === trimmed);
+  if (byId) return byId.userId;
+  const matches = people.filter(
+    (person) => person.name.toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (matches.length === 1) return matches[0].userId;
+  if (matches.length > 1) {
+    throw new ServiceError(422, "That name matches more than one person.", "invalid_assignee");
+  }
+  throw new ServiceError(422, "Unknown assignee.", "invalid_assignee");
 }
 
 export async function getBoard(): Promise<BoardSnapshot> {
@@ -103,51 +167,19 @@ export async function getBoard(): Promise<BoardSnapshot> {
   const projects = await sql<{ id: string; name: string }>`
     select id, name from projects order by created_at asc
   `;
-  const tasks = await sql<{
-    id: string;
-    title: string;
-    description: string;
-    url: string;
-    tags: unknown;
-    project_id: string | null;
-    column_id: string;
-    position: number;
-    created_at: string;
-    updated_at: string;
-    created_by: string;
-    updated_by: string;
-  }>`
-    select id, title, description, url, tags, project_id, column_id, position,
-           created_at, updated_at, created_by, updated_by
-    from tasks
-    order by column_id, position, created_at
-  `;
+  const tasks = await sql.query<TaskSql>(
+    `${TASK_SELECT} order by t.column_id, t.position, t.created_at`,
+  );
   return {
     projects,
     tasks: tasks.map(mapTask),
+    people: await listPeople(),
   };
 }
 
 export async function getTask(id: string): Promise<TaskRow> {
   const sql = await getSql();
-  const rows = await sql<{
-    id: string;
-    title: string;
-    description: string;
-    url: string;
-    tags: unknown;
-    project_id: string | null;
-    column_id: string;
-    position: number;
-    created_at: string;
-    updated_at: string;
-    created_by: string;
-    updated_by: string;
-  }>`
-    select id, title, description, url, tags, project_id, column_id, position,
-           created_at, updated_at, created_by, updated_by
-    from tasks where id = ${id} limit 1
-  `;
+  const rows = await sql.query<TaskSql>(`${TASK_SELECT} where t.id = $1 limit 1`, [id]);
   const row = rows[0];
   if (!row) throw new ServiceError(404, "Task not found", "not_found");
   return mapTask(row);
@@ -160,6 +192,8 @@ type TaskInput = {
   tags?: string[];
   columnId: string;
   projectId?: string;
+  assigneeId?: string;
+  assignee?: string;
 };
 
 async function resolveProjectId(projectId: string | undefined) {
@@ -197,6 +231,8 @@ export async function createTask(actor: Actor, input: TaskInput): Promise<TaskRo
   if (!parsed.ok) throw new ServiceError(422, "Enter a valid web link, like https://example.com.", "invalid_url");
   const columnId = input.columnId as ColumnId;
   const projectId = await resolveProjectId(input.projectId);
+  const assigneeId =
+    (await resolveAssigneeId(input.assigneeId ?? input.assignee)) ?? null;
   const id = newId("c");
   const position = await nextPosition(columnId);
   const sql = await getSql();
@@ -204,10 +240,11 @@ export async function createTask(actor: Actor, input: TaskInput): Promise<TaskRo
   await sql`
     insert into tasks (
       id, title, description, url, tags, project_id, column_id, position,
-      created_by, updated_by
+      created_by, updated_by, assignee_id
     ) values (
       ${id}, ${input.title.trim()}, ${input.description.trim()}, ${parsed.url},
-      ${tags}, ${projectId}, ${columnId}, ${position}, ${actor.userId}, ${actor.userId}
+      ${tags}, ${projectId}, ${columnId}, ${position}, ${actor.userId}, ${actor.userId},
+      ${assigneeId}
     )
   `;
   return getTask(id);
@@ -219,6 +256,9 @@ export async function updateTask(
   input: Partial<TaskInput>,
 ): Promise<TaskRow> {
   const existing = await getTask(id);
+  const assigneeId = await resolveAssigneeId(
+    input.assigneeId ?? input.assignee,
+  );
   const next = {
     title: input.title ?? existing.title,
     description: input.description ?? existing.description,
@@ -226,6 +266,7 @@ export async function updateTask(
     tags: input.tags ?? existing.tags,
     columnId: input.columnId ?? existing.columnId,
     projectId: input.projectId ?? existing.projectId,
+    assigneeId: assigneeId === undefined ? existing.assigneeId : (assigneeId ?? ""),
   };
   const errors = validateCardForm({
     title: next.title,
@@ -253,6 +294,7 @@ export async function updateTask(
       tags = ${uniqueTags(next.tags)},
       project_id = ${projectId},
       column_id = ${columnId},
+      assignee_id = ${next.assigneeId || null},
       updated_at = now(),
       updated_by = ${actor.userId}
     where id = ${id}

@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  UserRound,
 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type Ref } from "react";
 import { Button } from "@/components/ui/button";
@@ -167,8 +168,26 @@ export function KanbanCardView({
             </div>
           ) : null}
 
-          {stamped ? (
-            <p className="mt-2 text-xs text-subtle tabular-nums">{stamped}</p>
+          {card.assignee ? (
+            <p className="mt-2 flex min-w-0 items-center gap-1.5 text-xs text-fg">
+              <UserRound className="size-3.5 shrink-0 text-muted" />
+              <span className="truncate">{card.assignee}</span>
+            </p>
+          ) : null}
+
+          {card.creator || stamped ? (
+            <p
+              className={cn(
+                "text-xs text-subtle",
+                card.assignee ? "mt-1.5" : "mt-2",
+              )}
+            >
+              {card.creator ? `by ${card.creator}` : null}
+              {card.creator && stamped ? " · " : null}
+              {stamped ? (
+                <span className="tabular-nums">{stamped}</span>
+              ) : null}
+            </p>
           ) : null}
         </div>
 

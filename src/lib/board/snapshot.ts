@@ -1,10 +1,17 @@
-import { COLUMN_IDS, type Card, type Columns, type Project } from "./types";
+import {
+  COLUMN_IDS,
+  type Card,
+  type Columns,
+  type Person,
+  type Project,
+} from "./types";
 import type { BoardSnapshot, TaskRow } from "./service";
 
 export function snapshotToState(snapshot: BoardSnapshot): {
   cards: Record<string, Card>;
   columns: Columns;
   projects: Project[];
+  people: Person[];
 } {
   const cards: Record<string, Card> = {};
   const columns: Columns = { todo: [], doing: [], done: [] };
@@ -17,7 +24,12 @@ export function snapshotToState(snapshot: BoardSnapshot): {
       return task.id;
     });
   }
-  return { cards, columns, projects: snapshot.projects };
+  return {
+    cards,
+    columns,
+    projects: snapshot.projects,
+    people: snapshot.people ?? [],
+  };
 }
 
 function toCard(task: TaskRow): Card {
@@ -30,5 +42,9 @@ function toCard(task: TaskRow): Card {
     projectId: task.projectId,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    createdBy: task.createdBy,
+    creator: task.creator,
+    assigneeId: task.assigneeId,
+    assignee: task.assignee,
   };
 }

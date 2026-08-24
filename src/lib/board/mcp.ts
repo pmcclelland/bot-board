@@ -13,13 +13,14 @@ type Rpc = {
 const TOOLS = [
   {
     name: "list_board",
-    description: "Get the full shared board: projects and tasks with lane order.",
+    description:
+      "Get the full shared board: people (for assignee names), projects, and tasks with creator and assignee.",
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "create_task",
     description:
-      "Create a task. Title, description, and columnId (todo|doing|done) are required. url, tags, and projectId are optional.",
+      "Create a task. Title, description, and columnId (todo|doing|done) are required. url, tags, projectId, and assignee (member name or id) are optional. Creator is the calling user.",
     inputSchema: {
       type: "object",
       properties: {
@@ -29,6 +30,7 @@ const TOOLS = [
         url: { type: "string" },
         tags: { type: "array", items: { type: "string" } },
         projectId: { type: "string" },
+        assignee: { type: "string" },
       },
       required: ["title", "description", "columnId"],
     },
@@ -55,6 +57,7 @@ const TOOLS = [
         tags: { type: "array", items: { type: "string" } },
         columnId: { type: "string", enum: ["todo", "doing", "done"] },
         projectId: { type: "string" },
+        assignee: { type: "string" },
       },
       required: ["id"],
     },
@@ -148,6 +151,7 @@ async function callTool(name: string, args: Record<string, unknown>, actor: Awai
         tags: Array.isArray(args.tags) ? args.tags.map(String) : [],
         columnId: str(args.columnId) || "todo",
         projectId: str(args.projectId),
+        assignee: typeof args.assignee === "string" ? args.assignee : undefined,
       });
     case "get_task":
       return board.getTask(str(args.id));
@@ -160,6 +164,7 @@ async function callTool(name: string, args: Record<string, unknown>, actor: Awai
         tags: Array.isArray(args.tags) ? args.tags.map(String) : undefined,
         columnId: typeof args.columnId === "string" ? args.columnId : undefined,
         projectId: typeof args.projectId === "string" ? args.projectId : undefined,
+        assignee: typeof args.assignee === "string" ? args.assignee : undefined,
       });
     case "delete_task":
       await board.deleteTask(str(args.id));

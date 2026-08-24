@@ -1,41 +1,48 @@
 ---
 name: bot-board
 description: >
-  File, update, move, and complete work on the shared Bot Board kanban.
-  Use when tracking tasks your team or other bots are doing, or when the user
-  asks you to add something to the board.
+  Connect to Bot Board and work the shared To Do / Doing / Done kanban.
+  Use when a Grok Bot or Cursor agent should file, update, move, or complete
+  team tasks, or when the user asks to add something to the board.
 ---
 
 # Bot Board
 
-Shared To Do / Doing / Done board. Read it before you change it. Prefer MCP tools over scraping the UI.
+Shared To Do / Doing / Done board for humans and Grok Bots. Prefer the connected
+**BotBoard** MCP connector over scraping the UI.
 
 ## Connect
 
-Add the MCP server:
+Install this plugin (not a raw custom MCP). Set `BOTBOARD_TOKEN` in Cursor under
+**Plugins → Configure**. Mint the token in Bot Board → account menu → API tokens.
 
-- URL: `https://<your-app-host>/api/mcp`
-- Header: `Authorization: Bearer <token>`
+The live endpoint is `https://botboard.pmcclel.land/api/mcp`. REST is also
+available under `/api/v1` with the same bearer token.
 
-Mint the token in Bot Board → account menu → API tokens, signed in as this bot.
+Do not hard-code a token. Do not invent a second board product.
 
-REST is also available under `/api/v1` with the same bearer token.
+## Identity
 
-## Required vs optional
+The API token is the actor. Creator is always the calling user (the token
+owner). `createdBy` / `updatedBy` come from that token, not the Grok Bot chat
+display name. Do not send a creator field. A shared Leo token stays for now;
+per-bot identity comes later.
 
-When creating a task:
+Assignee is optional and separate: a member **name** (or user id) from the
+board’s `people` list. Empty string unassigns.
 
-- **Required:** `title`, `description`, `columnId` (`todo` | `doing` | `done`)
-- **Optional:** `url` (must be http or https with a real host), `tags`, `projectId`, `assignee` (member **name** from `list_board.people`, or their user id). Empty string unassigns.
+## How to work
 
-Creator is always the calling user. Do not send a creator field.
+1. Look up tools on the connected **BotBoard** connector. Do not assume a stale
+   argument schema from this skill.
+2. Always read the board first (`list_board` or the equivalent read tool). Use
+   `people` for assignee names, and each task’s `creator` / `assignee`.
+3. Use ids from that snapshot. Do not invent task, column, or project ids.
+4. File new work with a title, description, and column (`todo` | `doing` | `done`).
+   Optional: link, tags, project, assignee (name from `people` when the work
+   belongs to someone).
+5. Move `todo` → `doing` when you start, `doing` → `done` when shipped.
+6. Delete a task only after an explicit confirm.
 
-## Tools
-
-1. `list_board` — always start here. Use `people` for assignee names, and each task’s `creator` / `assignee`.
-2. `create_task` — file new work. Set `assignee` to a name from `people` when the work belongs to someone.
-3. `move_task` — `todo` → `doing` when you start, `done` when shipped.
-4. `update_task` / `delete_task` as needed.
-5. `list_projects` / `create_project` if work belongs to a named project.
-
-Do not invent task ids. Use ids from `list_board`.
+Focused skills: `list-board`, `create-task`, `move-task`, `update-task`,
+`manage-projects`.

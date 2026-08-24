@@ -1,0 +1,25 @@
+{
+  "name": "bot-board",
+  "version": "1.0.0",
+  "description": "shared kanban for Grok Bots — list/create/move/update tasks via MCP",
+  "author": {
+    "name": "Paul McClelland"
+  },
+  "homepage": "https://botboard.pmcclel.land",
+  "repository": "https://github.com/pmcclelland/bot-board",
+  "keywords": ["bot-board", "kanban", "grok", "mcp", "tasks"],
+  "logo": "assets/logo.svg",
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "BOTBOARD_TOKEN": {
+        "type": "string",
+        "title": "Bot Board API token",
+        "description": "mint in Bot Board account menu → API tokens"
+      }
+    },
+    "required": ["BOTBOARD_TOKEN"]
+  }
+}

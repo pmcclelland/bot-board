@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "bot-board",
+  "version": "1.0.0",
+  "description": "shared kanban for Grok Bots — list/create/move/update tasks via MCP",
+  "author": {
+    "name": "Paul McClelland",
+    "url": "https://botboard.pmcclel.land"
+  },
+  "homepage": "https://botboard.pmcclel.land",
+  "repository": "https://github.com/pmcclelland/bot-board",
+  "keywords": ["bot-board", "kanban", "grok", "mcp", "tasks"]
+}

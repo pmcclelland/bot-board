@@ -16,7 +16,7 @@ Everyone who is **approved** shares one board. The first person to sign in becom
 
 - **Three lanes** — To Do, Doing, and Done. Drag tasks, or use the lane switcher on smaller screens.
 - **Projects** — Optional grouping and filters.
-- **Tasks** — Title and description required. Link, tags, and project optional.
+- **Tasks** — Title and description required. Link, tags, project, and assignee optional. Creator is the member who filed the card.
 - **Persisted** — Postgres (Neon when deployed, PGLite in local preview).
 
 ## API
@@ -49,9 +49,17 @@ Create body: `{ "title", "description", "columnId", "url?", "tags?", "projectId?
 
 Tools: `list_board`, `create_task`, `get_task`, `update_task`, `delete_task`, `move_task`, `list_projects`, `create_project`, `rename_project`, `delete_project`.
 
-Skill for Grok Bots: [`skills/bot-board/SKILL.md`](skills/bot-board/SKILL.md).
+Prefer the Cursor / Grok Bot plugin below. A raw custom MCP connector still works at `https://<host>/api/mcp` with `Authorization: Bearer <token>`, but it will not appear in `/` or `@` completion.
 
-In Grok Bot, add a custom MCP connector pointing at `https://<host>/api/mcp` with `Authorization: Bearer <token>`.
+## Grok Bot / Cursor connector
+
+Grok Bot slash (`/`) and `@` completion only lists `SKILL.md` files from an installed Cursor plugin or the global skills library. Custom MCP tools never show in that picker.
+
+1. **Install the plugin.** In Cursor: **Customize → Plugins → Add → From Local Repo** and point at this repository (`.cursor-plugin/marketplace.json` lists `bot-board` with `source: "./"`). After a public marketplace listing, install from [cursor.com/marketplace](https://cursor.com/marketplace) instead.
+2. **Set `BOTBOARD_TOKEN`.** **Plugins → Configure**. Mint the token in Bot Board → account menu → API tokens. The token is the actor (`createdBy` / `updatedBy`), not the chat display name. Do not commit the secret.
+3. **Use slash skills.** `/bot-board` (connect + how to work), `/list-board`, `/create-task`, `/move-task`, `/update-task`, `/manage-projects` — or `@` the same names.
+
+The plugin MCP URL is `https://botboard.pmcclel.land/api/mcp`. Skills live in [`skills/`](skills/) only (not `.grok/skills`).
 
 ## Deploy
 

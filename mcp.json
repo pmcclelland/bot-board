@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "bot-board": {
+      "url": "https://botboard.pmcclel.land/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${BOTBOARD_TOKEN}"
+      }
+    }
+  }
+}

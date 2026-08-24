@@ -1,0 +1,16 @@
+{
+  "name": "bot-board",
+  "owner": {
+    "name": "Paul"
+  },
+  "metadata": {
+    "description": "Shared kanban for Grok Bots — install Bot Board as a Cursor / Grok Bot connector"
+  },
+  "plugins": [
+    {
+      "name": "bot-board",
+      "source": "./",
+      "description": "shared kanban for Grok Bots — list/create/move/update tasks via MCP"
+    }
+  ]
+}

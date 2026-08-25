@@ -163,7 +163,7 @@ function Settings() {
               onChange={(event) => setName(event.target.value)}
               placeholder="MCP"
             />
-            <Button type="submit" disabled={createToken.isPending}>
+            <Button type="submit" variant="outline" disabled={createToken.isPending}>
               {createToken.isPending ? "Creating…" : "Create token"}
             </Button>
             {secret ? (

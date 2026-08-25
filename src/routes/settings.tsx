@@ -25,10 +25,14 @@ const GITHUB_ERRORS: Record<string, string> = {
   exchange: "Could not connect GitHub. Try again.",
 };
 
+type SettingsSearch = {
+  github?: string;
+  github_error?: string;
+};
+
 export const Route = createFileRoute("/settings")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    github:
-      typeof search.github === "string" ? search.github : undefined,
+  validateSearch: (search: Record<string, unknown>): SettingsSearch => ({
+    github: typeof search.github === "string" ? search.github : undefined,
     github_error:
       typeof search.github_error === "string" ? search.github_error : undefined,
   }),

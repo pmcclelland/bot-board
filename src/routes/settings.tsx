@@ -213,11 +213,11 @@ function GithubFace({
 }) {
   const letter = initial?.trim().slice(0, 1).toUpperCase() ?? "";
   return (
-    <span className="grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated shadow-[var(--shadow-border)]">
+    <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated shadow-[var(--shadow-border)]">
       {src ? (
         <img src={src} alt="" className="size-full object-cover" />
       ) : letter ? (
-        <span className="text-xs font-medium">{letter}</span>
+        <span className="text-sm font-medium">{letter}</span>
       ) : null}
     </span>
   );
@@ -279,7 +279,7 @@ function GithubCard({
           />
           <p
             className={cn(
-              "min-w-0 truncate text-sm leading-6",
+              "min-w-0 truncate text-sm leading-10",
               connected ? "font-medium text-fg" : "text-muted",
             )}
           >

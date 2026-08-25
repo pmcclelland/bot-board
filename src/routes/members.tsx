@@ -12,14 +12,7 @@ import {
 import { toast } from "sonner";
 import { AccountBar } from "@/components/kanban/account-bar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -423,15 +416,24 @@ function EditMemberDialog({
   }
 
   return (
-    <Dialog open={Boolean(member)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="grid gap-4">
-          <DialogHeader>
-            <DialogTitle>Edit member</DialogTitle>
-            <DialogDescription>
-              Name, email, and description are all optional.
-            </DialogDescription>
-          </DialogHeader>
+    <Modal
+      open={Boolean(member)}
+      onOpenChange={(open) => !open && onClose()}
+      title="Edit member"
+      description="Name, email, and description are all optional."
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={pending}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Saving…" : "Save"}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-4">
           <div className="grid gap-2">
             <OptionalLabel htmlFor="member-name">Name</OptionalLabel>
             <Input
@@ -475,16 +477,7 @@ function EditMemberDialog({
               placeholder="Who this is, or how they use the board."
             />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={pending}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Saving…" : "Save"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </Modal>
   );
 }

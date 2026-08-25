@@ -1,14 +1,7 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { parseUrl, uniqueTags } from "@/lib/board/card-fields";
@@ -201,23 +194,34 @@ export function CardDialog({
   const columnError = shownError("columnId");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form noValidate onSubmit={handleSubmit} className="grid gap-5">
-          <DialogHeader>
-            <DialogTitle>
-              {mode === "create" ? "New task" : "Edit task"}
-            </DialogTitle>
-            <DialogDescription>
-              {mode === "create"
-                ? "Name and describe the work. Assignee, link, tags, and project are optional."
-                : initial.creator
-                  ? `Created by ${initial.creator}. Update the notes, assignee, or lane.`
-                  : "Update the notes, assignee, link, tags, or move it to another lane."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4">
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={mode === "create" ? "New task" : "Edit task"}
+      description={
+        mode === "create"
+          ? "Name and describe the work. Assignee, link, tags, and project are optional."
+          : initial.creator
+            ? `Created by ${initial.creator}. Update the notes, assignee, or lane.`
+            : "Update the notes, assignee, link, tags, or move it to another lane."
+      }
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">
+            {mode === "create" ? "Add task" : "Save changes"}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-4">
             <div className="grid gap-2">
               <FieldLabel htmlFor="card-title" required>
                 Title
@@ -406,21 +410,6 @@ export function CardDialog({
               <FieldError id="card-column-error" message={columnError} />
             </div>
           </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">
-              {mode === "create" ? "Add task" : "Save changes"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </Modal>
   );
 }

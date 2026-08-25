@@ -167,7 +167,7 @@ function Settings() {
             <Button
               type="submit"
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto sm:justify-self-start"
               disabled={createToken.isPending}
             >
               {createToken.isPending ? "Creating…" : "Create token"}
@@ -201,6 +201,25 @@ function Settings() {
         </section>
       </div>
     </main>
+  );
+}
+
+function GithubFace({
+  src,
+  initial,
+}: {
+  src?: string | null;
+  initial?: string | null;
+}) {
+  const letter = initial?.trim().slice(0, 1).toUpperCase() ?? "";
+  return (
+    <span className="grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated shadow-[var(--shadow-border)]">
+      {src ? (
+        <img src={src} alt="" className="size-full object-cover" />
+      ) : letter ? (
+        <span className="text-xs font-medium">{letter}</span>
+      ) : null}
+    </span>
   );
 }
 
@@ -253,33 +272,21 @@ function GithubCard({
           </p>
         ) : null}
 
-        <div className="flex min-h-6 items-center gap-2">
-          {connected && connection?.avatarUrl ? (
-            <img
-              src={connection.avatarUrl}
-              alt=""
-              className="size-6 shrink-0 rounded-full object-cover"
-            />
-          ) : connected ? (
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-elevated text-xs font-medium">
-              {(connection?.login ?? "?").slice(0, 1).toUpperCase()}
-            </span>
-          ) : (
-            <span
-              className="size-6 shrink-0 rounded-full bg-elevated shadow-[var(--shadow-border)]"
-              aria-hidden="true"
-            />
-          )}
+        <div className="flex items-center gap-3">
+          <GithubFace
+            src={connected ? connection?.avatarUrl : null}
+            initial={connected ? connection?.login : null}
+          />
           <p
             className={cn(
-              "min-w-0 truncate text-sm",
+              "min-w-0 truncate text-sm leading-6",
               connected ? "font-medium text-fg" : "text-muted",
             )}
           >
             {loading
               ? "Loading…"
               : connected
-                ? connection?.login
+                ? (connection?.login ?? "GitHub")
                 : "No GitHub account linked"}
           </p>
         </div>
@@ -299,21 +306,19 @@ function GithubCard({
         {isBot ? (
           <p className="text-xs text-subtle">Humans manage this link.</p>
         ) : loading ? null : connected ? (
-          <div className="flex flex-wrap gap-2">
-            {broken ? (
-              <Button disabled={connecting} onClick={onConnect}>
-                {connecting ? "Redirecting…" : "Reconnect"}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                disabled={disconnecting}
-                onClick={onDisconnect}
-              >
-                {disconnecting ? "Disconnecting…" : "Disconnect"}
-              </Button>
-            )}
-          </div>
+          broken ? (
+            <Button disabled={connecting} onClick={onConnect}>
+              {connecting ? "Redirecting…" : "Reconnect"}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              disabled={disconnecting}
+              onClick={onDisconnect}
+            >
+              {disconnecting ? "Disconnecting…" : "Disconnect"}
+            </Button>
+          )
         ) : (
           <Button disabled={!configured || connecting} onClick={onConnect}>
             {connecting ? "Redirecting…" : "Connect GitHub"}

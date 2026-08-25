@@ -102,6 +102,7 @@ export const SEED_CARDS: Record<string, Card> = {
 };
 
 export const SEED_COLUMNS: Columns = {
+  backlog: [],
   todo: ["c2", "c1", "c3"],
   doing: ["c5", "c4"],
   done: ["c6", "c7"],

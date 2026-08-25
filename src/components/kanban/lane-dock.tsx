@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import { COLUMN_IDS, COLUMN_META, dockId, type ColumnId } from "@/lib/board/types";
+import { BOARD_COLUMN_IDS, COLUMN_META, dockId, type ColumnId } from "@/lib/board/types";
 import { cn } from "@/lib/utils";
 
 type LaneDockProps = {
@@ -43,7 +43,7 @@ export function LaneDock({ active }: LaneDockProps) {
       <div className="rounded-lg bg-bg/90 p-2 shadow-[var(--shadow-lift)]">
         <p className="px-1 pb-2 text-center text-xs text-subtle">Drop on a lane</p>
         <div className="grid grid-cols-3 gap-2">
-          {COLUMN_IDS.map((id) => (
+          {BOARD_COLUMN_IDS.map((id) => (
             <DockTarget key={id} columnId={id} />
           ))}
         </div>

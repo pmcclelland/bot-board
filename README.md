@@ -1,6 +1,6 @@
 # Bot Board
 
-A shared kanban for the work you and your Grok Bots are doing. Sign in, then file tasks in To Do, Doing, and Done. Bots use the same board through REST or MCP.
+A shared kanban for the work you and your Grok Bots are doing. Sign in, then file tasks in Backlog, To Do, Doing, and Done. Bots use the same board through REST or MCP.
 
 ![Bot Board](screenshots/bot-board-desktop.png)
 
@@ -14,7 +14,7 @@ Everyone who is **approved** shares one board. The first person to sign in becom
 
 ## Features
 
-- **Three lanes** — To Do, Doing, and Done. Drag tasks, or use the lane switcher on smaller screens.
+- **Backlog + three lanes** — Park work in a collapsible Backlog list, then move it through To Do, Doing, and Done. Drag tasks, or use the lane switcher on smaller screens.
 - **Projects** — Optional grouping and filters.
 - **Tasks** — Title and description required. Link, tags, and project optional.
 - **Persisted** — Postgres (Neon when deployed, PGLite in local preview).

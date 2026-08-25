@@ -48,12 +48,15 @@ import { snapshotToState } from "@/lib/board/snapshot";
 import { useBoardStore } from "@/lib/board/store";
 import { cardMatches, collectTags } from "@/lib/board/card-fields";
 import {
+  BOARD_COLUMN_IDS,
   COLUMN_IDS,
   COLUMN_META,
   columnFromDroppable,
+  isBoardColumnId,
   type ColumnId,
   type Columns,
 } from "@/lib/board/types";
+import { BacklogCardView, BacklogList } from "./backlog-list";
 import { BoardHeading } from "./board-heading";
 import { CardDialog, type CardDraft } from "./card-dialog";
 import { BoardFilters } from "./filters";
@@ -156,11 +159,7 @@ export function KanbanBoard() {
   );
 
   const lists = useMemo(() => {
-    const next: Record<ColumnId, (typeof cards)[string][]> = {
-      todo: [],
-      doing: [],
-      done: [],
-    };
+    const next = {} as Record<ColumnId, (typeof cards)[string][]>;
     for (const id of COLUMN_IDS) {
       next[id] = columns[id].map((cardId) => cards[cardId]).filter(Boolean);
     }
@@ -180,17 +179,19 @@ export function KanbanBoard() {
       return cardMatches(card, query, selectedTags, projectName);
     };
     if (!filtering) return lists;
-    return {
-      todo: lists.todo.filter(match),
-      doing: lists.doing.filter(match),
-      done: lists.done.filter(match),
-    };
+    const next = {} as Record<ColumnId, (typeof cards)[string][]>;
+    for (const id of COLUMN_IDS) {
+      next[id] = lists[id].filter(match);
+    }
+    return next;
   }, [filtering, lists, query, selectedTags, selectedProjectId, projects]);
 
   const allTags = useMemo(() => collectTags(Object.values(cards)), [cards]);
   const total = Object.keys(cards).length;
-  const visibleTotal =
-    visibleLists.todo.length + visibleLists.doing.length + visibleLists.done.length;
+  const visibleTotal = COLUMN_IDS.reduce(
+    (sum, id) => sum + visibleLists[id].length,
+    0,
+  );
   const activeCard = activeId ? cards[String(activeId)] : undefined;
   const pendingCard = pendingDelete ? cards[pendingDelete] : undefined;
   const selectedProjectName = selectedProjectId
@@ -296,12 +297,16 @@ export function KanbanBoard() {
   }
 
   function scrollToLane(id: ColumnId) {
+    if (!isBoardColumnId(id)) {
+      setActiveLane(id);
+      return;
+    }
     const scroller = scrollerRef.current;
     if (!scroller) {
       setActiveLane(id);
       return;
     }
-    const index = COLUMN_IDS.indexOf(id);
+    const index = BOARD_COLUMN_IDS.indexOf(id);
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -316,7 +321,7 @@ export function KanbanBoard() {
     const scroller = scrollerRef.current;
     if (!scroller || scroller.clientWidth === 0) return;
     const index = Math.round(scroller.scrollLeft / scroller.clientWidth);
-    const id = COLUMN_IDS[Math.max(0, Math.min(index, COLUMN_IDS.length - 1))];
+    const id = BOARD_COLUMN_IDS[Math.max(0, Math.min(index, BOARD_COLUMN_IDS.length - 1))];
     if (id && id !== activeLane) setActiveLane(id);
   }
 
@@ -446,7 +451,12 @@ export function KanbanBoard() {
   return (
     <div className="board-shell flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 px-3 py-3 md:gap-6 md:px-8 md:py-8">
-        <BoardHeader isAdmin={isAdmin} onAdd={() => openCreate(activeLane)} />
+        <BoardHeader
+          isAdmin={isAdmin}
+          onAdd={() =>
+            openCreate(activeLane === "backlog" ? "todo" : activeLane)
+          }
+        />
 
         <BoardFilters
           query={query}
@@ -470,11 +480,11 @@ export function KanbanBoard() {
 
           <LaneSwitcher
             active={activeLane}
-            counts={{
-              todo: visibleLists.todo.length,
-              doing: visibleLists.doing.length,
-              done: visibleLists.done.length,
-            }}
+            counts={
+              Object.fromEntries(
+                BOARD_COLUMN_IDS.map((id) => [id, visibleLists[id].length]),
+              ) as Record<ColumnId, number>
+            }
             onSelect={scrollToLane}
           />
 
@@ -487,12 +497,25 @@ export function KanbanBoard() {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
+          <BacklogList
+            cards={visibleLists.backlog}
+            empty={lists.backlog.length === 0}
+            filtering={filtering}
+            selectedTags={selectedTags}
+            dragDisabled={searchFiltering}
+            onAdd={() => openCreate("backlog")}
+            onEdit={openEdit}
+            onDelete={setPendingDelete}
+            onMove={handleMove}
+            onToggleTag={toggleTag}
+          />
+
           <div
             ref={scrollerRef}
             onScroll={handleScrollerScroll}
             className="lane-scroller flex min-h-0 flex-1 items-stretch overflow-x-auto overflow-y-hidden snap-x snap-mandatory md:grid md:grid-cols-3 md:gap-3 md:overflow-visible md:snap-none"
           >
-            {COLUMN_IDS.map((columnId) => (
+            {BOARD_COLUMN_IDS.map((columnId) => (
               <KanbanColumn
                 key={columnId}
                 columnId={columnId}
@@ -515,12 +538,21 @@ export function KanbanBoard() {
 
           <DragOverlay dropAnimation={dropAnimation}>
             {activeCard ? (
-              <KanbanCardView
-                card={activeCard}
-                isOverlay
-                onEdit={() => {}}
-                onDelete={() => {}}
-              />
+              findColumn(String(activeId)) === "backlog" ? (
+                <BacklogCardView
+                  card={activeCard}
+                  isOverlay
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                />
+              ) : (
+                <KanbanCardView
+                  card={activeCard}
+                  isOverlay
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                />
+              )
             ) : null}
           </DragOverlay>
         </DndContext>

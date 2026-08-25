@@ -1,6 +1,8 @@
-export const COLUMN_IDS = ["todo", "doing", "done"] as const;
+export const COLUMN_IDS = ["backlog", "todo", "doing", "done"] as const;
+export const BOARD_COLUMN_IDS = ["todo", "doing", "done"] as const;
 
 export type ColumnId = (typeof COLUMN_IDS)[number];
+export type BoardColumnId = (typeof BOARD_COLUMN_IDS)[number];
 
 export type Project = {
   id: string;
@@ -41,10 +43,19 @@ export type CardInput = {
 
 export type Columns = Record<ColumnId, string[]>;
 
+export function emptyColumns(): Columns {
+  return { backlog: [], todo: [], doing: [], done: [] };
+}
+
 export const COLUMN_META: Record<
   ColumnId,
   { label: string; hint: string; tone: string }
 > = {
+  backlog: {
+    label: "Backlog",
+    hint: "Parked for later",
+    tone: "bg-muted",
+  },
   todo: {
     label: "To Do",
     hint: "Ready to start",
@@ -68,6 +79,10 @@ export const MAX_PROJECT_NAME = 32;
 
 export function isColumnId(value: string): value is ColumnId {
   return (COLUMN_IDS as readonly string[]).includes(value);
+}
+
+export function isBoardColumnId(value: string): value is BoardColumnId {
+  return (BOARD_COLUMN_IDS as readonly string[]).includes(value);
 }
 
 export function dockId(columnId: ColumnId) {

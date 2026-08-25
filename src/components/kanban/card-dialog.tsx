@@ -165,7 +165,7 @@ export function CardDialog({
         title: "card-title",
         description: "card-description",
         url: "card-url",
-        columnId: "card-column-todo",
+        columnId: "card-column-first",
       }[first];
       document.getElementById(focusId)?.focus();
       return;
@@ -372,7 +372,7 @@ export function CardDialog({
               </FieldLabel>
               <div
                 className={cn(
-                  "grid grid-cols-3 gap-1.5 rounded-md bg-elevated p-1 shadow-[var(--shadow-border)]",
+                  "grid grid-cols-2 gap-1.5 rounded-md bg-elevated p-1 shadow-[var(--shadow-border)] sm:grid-cols-4",
                   columnError && "ring-2 ring-danger/70",
                 )}
                 role="group"
@@ -388,7 +388,7 @@ export function CardDialog({
                   return (
                     <button
                       key={id}
-                      id={id === "todo" ? "card-column-todo" : undefined}
+                      id={id === COLUMN_IDS[0] ? "card-column-first" : undefined}
                       type="button"
                       onClick={() => {
                         setColumnId(id);

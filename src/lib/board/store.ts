@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { uniqueTags } from "./card-fields";
 import {
   COLUMN_IDS,
+  emptyColumns,
   type Card,
   type CardInput,
   type ColumnId,
@@ -93,7 +94,7 @@ function insertCard(
 
 export const useBoardStore = create<BoardState>()((set, get) => ({
       cards: {},
-      columns: { todo: [], doing: [], done: [] },
+      columns: emptyColumns(),
       projects: [],
       people: [],
       hasHydrated: false,

@@ -1,4 +1,4 @@
-import { COLUMN_IDS, COLUMN_META, type ColumnId } from "@/lib/board/types";
+import { BOARD_COLUMN_IDS, COLUMN_META, type ColumnId } from "@/lib/board/types";
 import { cn } from "@/lib/utils";
 
 type LaneSwitcherProps = {
@@ -14,7 +14,7 @@ export function LaneSwitcher({ active, counts, onSelect }: LaneSwitcherProps) {
       role="tablist"
       aria-label="Board lanes"
     >
-      {COLUMN_IDS.map((id) => {
+      {BOARD_COLUMN_IDS.map((id) => {
         const selected = active === id;
         return (
           <button

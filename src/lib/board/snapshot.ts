@@ -1,5 +1,6 @@
 import {
   COLUMN_IDS,
+  emptyColumns,
   type Card,
   type Columns,
   type Person,
@@ -14,7 +15,7 @@ export function snapshotToState(snapshot: BoardSnapshot): {
   people: Person[];
 } {
   const cards: Record<string, Card> = {};
-  const columns: Columns = { todo: [], doing: [], done: [] };
+  const columns: Columns = emptyColumns();
   for (const columnId of COLUMN_IDS) {
     const ordered = snapshot.tasks
       .filter((task) => task.columnId === columnId)

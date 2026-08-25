@@ -20,13 +20,13 @@ const TOOLS = [
   {
     name: "create_task",
     description:
-      "Create a task. Title, description, and columnId (todo|doing|done) are required. url, tags, projectId, and assignee (member name or id) are optional. Creator is the calling user.",
+      "Create a task. Title, description, and columnId (backlog|todo|doing|done) are required. url, tags, projectId, and assignee (member name or id) are optional. Creator is the calling user.",
     inputSchema: {
       type: "object",
       properties: {
         title: { type: "string" },
         description: { type: "string" },
-        columnId: { type: "string", enum: ["todo", "doing", "done"] },
+        columnId: { type: "string", enum: ["backlog", "todo", "doing", "done"] },
         url: { type: "string" },
         tags: { type: "array", items: { type: "string" } },
         projectId: { type: "string" },
@@ -55,7 +55,7 @@ const TOOLS = [
         description: { type: "string" },
         url: { type: "string" },
         tags: { type: "array", items: { type: "string" } },
-        columnId: { type: "string", enum: ["todo", "doing", "done"] },
+        columnId: { type: "string", enum: ["backlog", "todo", "doing", "done"] },
         projectId: { type: "string" },
         assignee: { type: "string" },
       },
@@ -78,7 +78,7 @@ const TOOLS = [
       type: "object",
       properties: {
         id: { type: "string" },
-        columnId: { type: "string", enum: ["todo", "doing", "done"] },
+        columnId: { type: "string", enum: ["backlog", "todo", "doing", "done"] },
         projectId: { type: "string" },
         beforeId: { type: "string" },
       },

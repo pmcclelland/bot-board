@@ -44,7 +44,7 @@ import {
   moveTaskFn,
   updateTaskFn,
 } from "@/lib/board/server-fns";
-import { snapshotToState } from "@/lib/board/snapshot";
+import { snapshotFingerprint, snapshotToState } from "@/lib/board/snapshot";
 import { useBoardStore } from "@/lib/board/store";
 import { cardMatches, collectTags } from "@/lib/board/card-fields";
 import {
@@ -104,23 +104,31 @@ export function KanbanBoard() {
   const findColumn = useBoardStore((s) => s.findColumn);
   const addProject = useBoardStore((s) => s.addProject);
   const hydrate = useBoardStore((s) => s.hydrate);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const dragging = Boolean(activeId);
+  const lastFingerprint = useRef("");
 
   const boardQuery = useQuery({
     queryKey: ["board"],
     queryFn: () => loadBoardFn(),
     enabled: Boolean(user) && isApproved,
+    refetchInterval: dragging ? false : 3_000,
+    refetchOnWindowFocus: !dragging,
+    refetchOnReconnect: true,
   });
 
   useEffect(() => {
-    if (!boardQuery.data) return;
+    if (!boardQuery.data || dragging) return;
+    const fingerprint = snapshotFingerprint(boardQuery.data);
+    if (fingerprint === lastFingerprint.current) return;
+    lastFingerprint.current = fingerprint;
     hydrate(snapshotToState(boardQuery.data));
-  }, [boardQuery.data, hydrate]);
+  }, [boardQuery.data, dragging, hydrate]);
 
   function refreshBoard() {
     void queryClient.invalidateQueries({ queryKey: ["board"] });
   }
 
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [dialog, setDialog] = useState<{
     open: boolean;
     mode: "create" | "edit";

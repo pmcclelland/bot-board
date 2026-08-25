@@ -8,6 +8,34 @@ import {
 } from "./types";
 import type { BoardSnapshot, TaskRow } from "./service";
 
+export function snapshotFingerprint(snapshot: BoardSnapshot): string {
+  const tasks = snapshot.tasks
+    .map(
+      (task) =>
+        [
+          task.id,
+          task.columnId,
+          task.position,
+          task.updatedAt,
+          task.assigneeId,
+          task.title,
+          task.description,
+          task.url,
+          task.tags.join(","),
+          task.projectId,
+        ].join(":"),
+    )
+    .sort()
+    .join("\n");
+  const projects = snapshot.projects
+    .map((project) => `${project.id}:${project.name}`)
+    .join("|");
+  const people = (snapshot.people ?? [])
+    .map((person) => `${person.userId}:${person.name}:${person.image ?? ""}`)
+    .join("|");
+  return `${tasks}#${projects}#${people}`;
+}
+
 export function snapshotToState(snapshot: BoardSnapshot): {
   cards: Record<string, Card>;
   columns: Columns;

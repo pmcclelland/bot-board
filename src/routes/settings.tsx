@@ -43,7 +43,7 @@ function Settings() {
   const { user, isPending, isApproved, isBot } = useMembership();
   const { github, github_error: githubError } = Route.useSearch();
   const queryClient = useQueryClient();
-  const [name, setName] = useState("Grok Bot");
+  const [name, setName] = useState("");
   const [secret, setSecret] = useState<string | null>(null);
 
   const tokens = useQuery({
@@ -161,7 +161,7 @@ function Settings() {
               id="token-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Grok Bot"
+              placeholder="MCP"
             />
             <Button type="submit" disabled={createToken.isPending}>
               {createToken.isPending ? "Creating…" : "Create token"}
@@ -290,18 +290,14 @@ function GithubCard({
                 >
                   {disconnecting ? "Disconnecting…" : "Disconnect"}
                 </Button>
-                {!broken ? (
-                  <Button variant="ghost" disabled={connecting} onClick={onConnect}>
-                    {connecting ? "Redirecting…" : "Reconnect"}
-                  </Button>
-                ) : null}
               </div>
             )}
           </div>
         ) : (
           <div className="grid gap-3">
+            <p className="text-sm text-muted">No GitHub account linked</p>
             {!configured ? (
-              <p className="text-sm text-muted">
+              <p className="text-sm text-subtle">
                 GitHub is not configured for this board.
               </p>
             ) : null}

@@ -75,13 +75,14 @@ Create a GitHub OAuth App (User-to-server) and set:
 | `GITHUB_CLIENT_ID` | OAuth app client id |
 | `GITHUB_CLIENT_SECRET` | OAuth app client secret |
 
-Authorization callback URL:
+GitHub connect builds `redirect_uri` from the **incoming request host** (`x-forwarded-host`, then `VERCEL_URL`). It does **not** use `BETTER_AUTH_URL` — that stays the Better Auth / broker origin for Google and X sign-in. Register **both** callback URLs on the GitHub OAuth App:
 
 ```text
-{BETTER_AUTH_URL}/api/github/callback
+https://botboard.pmcclel.land/api/github/callback
+https://bot-board-git-cursor-github-projects-e085-pmcclellands-projects.vercel.app/api/github/callback
 ```
 
-Example: `https://botboard.pmcclel.land/api/github/callback`
+Add any later preview host the same way: `https://<preview-host>/api/github/callback`.
 
 Requested scopes: `read:user` and `repo` (so private repos the user owns are included). The access token is encrypted at rest with `BETTER_AUTH_SECRET`.
 

@@ -88,7 +88,7 @@ export function BoardHeader({ onAdd, isAdmin }: BoardHeaderProps) {
               ) : null}
               <DropdownMenuItem onSelect={() => navigate({ to: "/settings" })}>
                 <KeyRound className="size-4" />
-                API tokens
+                Settings
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={signingOut}

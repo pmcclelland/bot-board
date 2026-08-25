@@ -36,6 +36,6 @@ Creator is always the calling user. Do not send a creator field.
 2. `create_task` — file new work. Set `assignee` to a name from `people` when the work belongs to someone.
 3. `move_task` — `backlog` → `todo` when it is ready to start, `todo` → `doing` when you start, `done` when shipped.
 4. `update_task` / `delete_task` as needed.
-5. `list_projects` / `create_project` if work belongs to a named project.
+5. `list_projects` if work belongs to a GitHub repository on the board. Do not call `create_project` / `rename_project` / `delete_project` — those names come from GitHub.
 
 Do not invent task ids. Use ids from `list_board`.

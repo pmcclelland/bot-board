@@ -15,6 +15,7 @@ export function useMembership() {
     membership: membership.data ?? null,
     isApproved: membership.data?.status === "approved",
     isAdmin: membership.data?.status === "approved" && membership.data.role === "admin",
+    isBot: Boolean(membership.data?.isBot),
     error: membership.error,
   };
 }

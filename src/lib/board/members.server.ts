@@ -206,6 +206,23 @@ export async function requireApprovedMember(userId: string): Promise<Member> {
   return member;
 }
 
+export async function isBotUser(userId: string) {
+  const info = await profile(userId);
+  return isInternalEmail(info.email);
+}
+
+export async function requireApprovedHuman(userId: string): Promise<Member> {
+  const member = await requireApprovedMember(userId);
+  if (await isBotUser(userId)) {
+    throw new ServiceError(
+      403,
+      "Bots cannot connect GitHub.",
+      "bots_cannot_connect",
+    );
+  }
+  return member;
+}
+
 export async function requireAdmin(userId: string): Promise<Member> {
   const member = await requireApprovedMember(userId);
   if (member.role !== "admin") {

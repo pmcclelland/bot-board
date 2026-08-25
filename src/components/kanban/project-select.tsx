@@ -1,11 +1,11 @@
-import { Check, ChevronDown, Plus } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useMemo, useState, type KeyboardEvent } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MAX_PROJECT_NAME, type Project } from "@/lib/board/types";
+import type { Project } from "@/lib/board/types";
 import { cn } from "@/lib/utils";
 
 type ProjectSelectProps = {
@@ -13,7 +13,6 @@ type ProjectSelectProps = {
   projects: Project[];
   value: string;
   onChange: (id: string) => void;
-  onCreate?: (name: string) => string | null | Promise<string | null>;
 };
 
 export function ProjectSelect({
@@ -21,13 +20,12 @@ export function ProjectSelect({
   projects,
   value,
   onChange,
-  onCreate,
 }: ProjectSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const selected = projects.find((project) => project.id === value);
-  const trimmed = query.trim().slice(0, MAX_PROJECT_NAME);
+  const trimmed = query.trim();
   const matches = useMemo(() => {
     const needle = trimmed.toLowerCase();
     if (!needle) return projects;
@@ -35,39 +33,24 @@ export function ProjectSelect({
       project.name.toLowerCase().includes(needle),
     );
   }, [projects, trimmed]);
-  const exactMatch = projects.some(
-    (project) => project.name.toLowerCase() === trimmed.toLowerCase(),
-  );
-  const canCreate = Boolean(onCreate && trimmed && !exactMatch);
 
-  function choose(id: string) {
-    onChange(id);
+  function choose(nextId: string) {
+    onChange(nextId);
     setQuery("");
     setOpen(false);
   }
 
-  async function createFromQuery() {
-    if (!canCreate || !onCreate) return;
-    const created = await onCreate(trimmed);
-    if (created) choose(created);
-  }
-
   function handleQueryKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (exactMatch) {
-        const match = projects.find(
-          (project) => project.name.toLowerCase() === trimmed.toLowerCase(),
-        );
-        if (match) choose(match.id);
-        return;
-      }
-      if (canCreate) {
-        createFromQuery();
-        return;
-      }
-      if (matches.length === 1) choose(matches[0].id);
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const exact = projects.find(
+      (project) => project.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (exact) {
+      choose(exact.id);
+      return;
     }
+    if (matches.length === 1) choose(matches[0].id);
   }
 
   return (
@@ -106,10 +89,9 @@ export function ProjectSelect({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={handleQueryKeyDown}
-          placeholder="Search or add a project"
-          maxLength={MAX_PROJECT_NAME}
+          placeholder="Search projects"
           className="h-10 w-full rounded-sm bg-elevated px-2.5 text-sm text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70"
-          aria-label="Search or add a project"
+          aria-label="Search projects"
         />
         <div
           id="project-select-list"
@@ -155,18 +137,12 @@ export function ProjectSelect({
               </button>
             );
           })}
-          {matches.length === 0 && !canCreate ? (
-            <p className="px-2.5 py-3 text-sm text-subtle">No projects match</p>
-          ) : null}
-          {canCreate ? (
-            <button
-              type="button"
-              onClick={createFromQuery}
-              className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-2.5 text-left text-sm outline-none transition-[background-color] duration-150 ease-out hover:bg-elevated focus-visible:bg-elevated"
-            >
-              <Plus className="size-4 shrink-0" />
-              <span className="truncate">Create “{trimmed}”</span>
-            </button>
+          {matches.length === 0 ? (
+            <p className="px-2.5 py-3 text-sm text-subtle">
+              {projects.length === 0
+                ? "Connect GitHub in Settings to use repositories as projects."
+                : "No projects match"}
+            </p>
           ) : null}
         </div>
       </PopoverContent>

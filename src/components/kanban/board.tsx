@@ -102,7 +102,6 @@ export function KanbanBoard() {
   const hasHydrated = useBoardStore((s) => s.hasHydrated);
   const setColumns = useBoardStore((s) => s.setColumns);
   const findColumn = useBoardStore((s) => s.findColumn);
-  const addProject = useBoardStore((s) => s.addProject);
   const hydrate = useBoardStore((s) => s.hydrate);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const dragging = Boolean(activeId);
@@ -574,7 +573,6 @@ export function KanbanBoard() {
         suggestions={allTags}
         projects={projects}
         people={people}
-        onCreateProject={addProject}
         onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
         onSubmit={handleDialogSubmit}
       />

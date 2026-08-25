@@ -212,8 +212,16 @@ function GithubFace({
   initial?: string | null;
 }) {
   const letter = initial?.trim().slice(0, 1).toUpperCase() ?? "";
+  const empty = !src && !letter;
   return (
-    <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated shadow-[var(--shadow-border)]">
+    <span
+      className={cn(
+        "grid size-10 shrink-0 place-items-center overflow-hidden rounded-full",
+        empty
+          ? "bg-transparent shadow-[var(--shadow-hairline)]"
+          : "bg-elevated shadow-[var(--shadow-border)]",
+      )}
+    >
       {src ? (
         <img src={src} alt="" className="size-full object-cover" />
       ) : letter ? (

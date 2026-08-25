@@ -87,43 +87,49 @@ export function BoardFilters({
               ) : null}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent
+            align="end"
+            collisionPadding={8}
+            className="flex w-56 max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col"
+          >
             <DropdownMenuLabel>Project</DropdownMenuLabel>
-            <DropdownMenuItem
-              onSelect={(event) => {
-                event.preventDefault();
-                onSelectProject(null);
-              }}
-            >
-              <Check
-                className={cn(
-                  "size-4",
-                  selectedProjectId ? "opacity-0" : "opacity-100",
-                )}
-              />
-              All projects
-            </DropdownMenuItem>
-            {projects.map((project) => (
+            <div className="min-h-0 max-h-[min(15rem,var(--radix-dropdown-menu-content-available-height,15rem))] overflow-y-auto">
               <DropdownMenuItem
-                key={project.id}
                 onSelect={(event) => {
                   event.preventDefault();
-                  onSelectProject(
-                    selectedProjectId === project.id ? null : project.id,
-                  );
+                  onSelectProject(null);
                 }}
               >
                 <Check
                   className={cn(
                     "size-4",
-                    selectedProjectId === project.id
-                      ? "opacity-100"
-                      : "opacity-0",
+                    selectedProjectId ? "opacity-0" : "opacity-100",
                   )}
                 />
-                {project.name}
+                All projects
               </DropdownMenuItem>
-            ))}
+              {projects.map((project) => (
+                <DropdownMenuItem
+                  key={project.id}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    onSelectProject(
+                      selectedProjectId === project.id ? null : project.id,
+                    );
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "size-4",
+                      selectedProjectId === project.id
+                        ? "opacity-100"
+                        : "opacity-0",
+                    )}
+                  />
+                  {project.name}
+                </DropdownMenuItem>
+              ))}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}

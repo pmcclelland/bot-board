@@ -82,22 +82,23 @@ export function ProjectSelect({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-1"
+        className="flex w-[var(--radix-popover-trigger-width)] max-h-[var(--radix-popover-content-available-height)] flex-col p-1"
         align="start"
+        collisionPadding={8}
       >
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={handleQueryKeyDown}
           placeholder="Search projects"
-          className="h-10 w-full rounded-sm bg-elevated px-2.5 text-sm text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70"
+          className="h-10 w-full shrink-0 rounded-sm bg-elevated px-2.5 text-sm text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70"
           aria-label="Search projects"
         />
         <div
           id="project-select-list"
           role="listbox"
           aria-label="Projects"
-          className="mt-1 max-h-52 overflow-y-auto"
+          className="mt-1 min-h-0 max-h-[min(13rem,var(--radix-popover-content-available-height,13rem))] overflow-y-auto"
         >
           {!trimmed ? (
             <button

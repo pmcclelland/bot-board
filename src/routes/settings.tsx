@@ -16,6 +16,7 @@ import {
   startGithubConnectFn,
 } from "@/lib/board/server-fns";
 import type { GithubConnectionPublic } from "@/lib/github/types";
+import { cn } from "@/lib/utils";
 
 const GITHUB_ERRORS: Record<string, string> = {
   denied: "GitHub access was cancelled.",
@@ -163,7 +164,12 @@ function Settings() {
               onChange={(event) => setName(event.target.value)}
               placeholder="MCP"
             />
-            <Button type="submit" variant="outline" disabled={createToken.isPending}>
+            <Button
+              type="submit"
+              variant="outline"
+              className="w-full sm:w-auto"
+              disabled={createToken.isPending}
+            >
               {createToken.isPending ? "Creating…" : "Create token"}
             </Button>
             {secret ? (
@@ -247,73 +253,71 @@ function GithubCard({
           </p>
         ) : null}
 
-        {loading ? (
-          <p className="text-sm text-muted">Loading…</p>
-        ) : connected ? (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              {connection?.avatarUrl ? (
-                <img
-                  src={connection.avatarUrl}
-                  alt=""
-                  className="size-10 rounded-full object-cover"
-                />
-              ) : (
-                <span className="grid size-10 place-items-center rounded-full bg-elevated text-sm font-medium">
-                  {(connection?.login ?? "?").slice(0, 1).toUpperCase()}
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
-                  {connection?.login}
-                </p>
-                <p className="text-xs text-subtle">
-                  {broken
-                    ? "Access was revoked. Reconnect to refresh projects."
-                    : "Connected for repository access"}
-                </p>
-              </div>
-            </div>
-            {isBot ? (
-              <p className="text-xs text-subtle">Humans manage this link.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {broken ? (
-                  <Button disabled={connecting} onClick={onConnect}>
-                    {connecting ? "Redirecting…" : "Reconnect"}
-                  </Button>
-                ) : null}
-                <Button
-                  variant={broken ? "ghost" : "outline"}
-                  disabled={disconnecting}
-                  onClick={onDisconnect}
-                >
-                  {disconnecting ? "Disconnecting…" : "Disconnect"}
-                </Button>
-              </div>
+        <div className="flex min-h-6 items-center gap-2">
+          {connected && connection?.avatarUrl ? (
+            <img
+              src={connection.avatarUrl}
+              alt=""
+              className="size-6 shrink-0 rounded-full object-cover"
+            />
+          ) : connected ? (
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-elevated text-xs font-medium">
+              {(connection?.login ?? "?").slice(0, 1).toUpperCase()}
+            </span>
+          ) : (
+            <span
+              className="size-6 shrink-0 rounded-full bg-elevated shadow-[var(--shadow-border)]"
+              aria-hidden="true"
+            />
+          )}
+          <p
+            className={cn(
+              "min-w-0 truncate text-sm",
+              connected ? "font-medium text-fg" : "text-muted",
             )}
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            <p className="text-sm text-muted">No GitHub account linked</p>
-            {!configured ? (
-              <p className="text-sm text-subtle">
-                GitHub is not configured for this board.
-              </p>
-            ) : null}
-            {isBot ? (
-              <p className="text-sm text-muted">
-                An approved human connects GitHub from this page.
-              </p>
+          >
+            {loading
+              ? "Loading…"
+              : connected
+                ? connection?.login
+                : "No GitHub account linked"}
+          </p>
+        </div>
+
+        {broken ? (
+          <p className="text-xs text-subtle">
+            Access was revoked. Reconnect to refresh projects.
+          </p>
+        ) : null}
+
+        {!connected && !configured ? (
+          <p className="text-sm text-subtle">
+            GitHub is not configured for this board.
+          </p>
+        ) : null}
+
+        {isBot ? (
+          <p className="text-xs text-subtle">Humans manage this link.</p>
+        ) : loading ? null : connected ? (
+          <div className="flex flex-wrap gap-2">
+            {broken ? (
+              <Button disabled={connecting} onClick={onConnect}>
+                {connecting ? "Redirecting…" : "Reconnect"}
+              </Button>
             ) : (
               <Button
-                disabled={!configured || connecting}
-                onClick={onConnect}
+                variant="outline"
+                disabled={disconnecting}
+                onClick={onDisconnect}
               >
-                {connecting ? "Redirecting…" : "Connect GitHub"}
+                {disconnecting ? "Disconnecting…" : "Disconnect"}
               </Button>
             )}
           </div>
+        ) : (
+          <Button disabled={!configured || connecting} onClick={onConnect}>
+            {connecting ? "Redirecting…" : "Connect GitHub"}
+          </Button>
         )}
       </div>
     </section>

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 type TagChipProps = {
   label: string;
   selected?: boolean;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "card";
   onSelect?: () => void;
   onRemove?: () => void;
 };
@@ -16,13 +16,16 @@ export function TagChip({
   onSelect,
   onRemove,
 }: TagChipProps) {
+  const cardChip = size === "card";
   const classes = cn(
     "inline-flex max-w-full shrink-0 items-center gap-1 rounded-full font-medium",
     "transition-[background-color,color,box-shadow] duration-150 ease-out",
-    size === "sm" ? "h-7 px-2 text-xs" : "h-9 px-3 text-sm",
-    selected
+    cardChip ? "kanban-card-chip" : size === "sm" ? "h-7 px-2 text-xs" : "h-9 px-3 text-sm",
+    !cardChip && selected
       ? "bg-primary text-primary-fg"
-      : "bg-elevated text-muted shadow-[var(--shadow-border)]",
+      : !cardChip
+        ? "bg-elevated text-muted shadow-[var(--shadow-border)]"
+        : null,
   );
 
   if (onSelect) {

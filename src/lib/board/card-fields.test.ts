@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   cardMatches,
   collectTags,
+  formatCompactAge,
   linkLabel,
   parseUrl,
   uniqueTags,
@@ -58,10 +59,7 @@ describe("parseUrl", () => {
 
 describe("uniqueTags", () => {
   it("trims, de-dupes, and caps length", () => {
-    assert.deepEqual(uniqueTags([" Writing ", "writing", "Launch"]), [
-      "Writing",
-      "Launch",
-    ]);
+    assert.deepEqual(uniqueTags([" Writing ", "writing", "Launch"]), ["Writing", "Launch"]);
   });
 });
 
@@ -101,5 +99,23 @@ describe("collectTags", () => {
 describe("linkLabel", () => {
   it("shows host and path without the scheme", () => {
     assert.equal(linkLabel("https://www.figma.com/file/abc"), "figma.com/file/abc");
+  });
+});
+
+describe("formatCompactAge", () => {
+  const now = Date.parse("2026-08-25T12:00:00.000Z");
+
+  it("returns compact units instead of a relative sentence", () => {
+    assert.equal(formatCompactAge("2026-08-25T11:38:00.000Z", now), "22m");
+    assert.equal(formatCompactAge("2026-08-24T14:00:00.000Z", now), "22h");
+    assert.equal(formatCompactAge("2026-08-23T12:00:00.000Z", now), "2d");
+    assert.equal(formatCompactAge("2026-08-11T12:00:00.000Z", now), "2w");
+    assert.equal(formatCompactAge("2026-06-25T12:00:00.000Z", now), "2mo");
+    assert.equal(formatCompactAge("2024-08-25T12:00:00.000Z", now), "2y");
+  });
+
+  it("floors under a minute to 1m and ignores invalid dates", () => {
+    assert.equal(formatCompactAge("2026-08-25T11:59:20.000Z", now), "1m");
+    assert.equal(formatCompactAge("not-a-date", now), "");
   });
 });

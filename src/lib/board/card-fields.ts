@@ -21,10 +21,8 @@ export function uniqueTags(tags: string[], limit = MAX_TAGS) {
   return next;
 }
 
-const IPV4 =
-  /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
-const DOMAIN =
-  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+const IPV4 = /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
+const DOMAIN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
 
 function isWebHost(hostname: string) {
   if (!hostname) return false;
@@ -55,6 +53,27 @@ export function parseUrl(input: string): { ok: true; url: string } | { ok: false
   }
 }
 
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+const WEEK = 7 * DAY;
+const MONTH = 30 * DAY;
+const YEAR = 365 * DAY;
+
+/** Compact relative age for Card v2 footers: `22h`, not "about 22 hours ago". */
+export function formatCompactAge(input: string, now = Date.now()) {
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return "";
+  const delta = Math.max(0, now - date.getTime());
+  if (delta < MINUTE) return "1m";
+  if (delta < HOUR) return `${Math.floor(delta / MINUTE)}m`;
+  if (delta < DAY) return `${Math.floor(delta / HOUR)}h`;
+  if (delta < WEEK) return `${Math.floor(delta / DAY)}d`;
+  if (delta < MONTH) return `${Math.floor(delta / WEEK)}w`;
+  if (delta < YEAR) return `${Math.floor(delta / MONTH)}mo`;
+  return `${Math.floor(delta / YEAR)}y`;
+}
+
 export function linkLabel(url: string) {
   try {
     const parsed = new URL(url);
@@ -70,12 +89,7 @@ export function collectTags(cards: Iterable<Card>) {
   return uniqueTags(Array.from(cards, (card) => card.tags).flat(), Number.POSITIVE_INFINITY);
 }
 
-export function cardMatches(
-  card: Card,
-  query: string,
-  selectedTags: string[],
-  extraHaystack = "",
-) {
+export function cardMatches(card: Card, query: string, selectedTags: string[], extraHaystack = "") {
   if (selectedTags.length > 0) {
     const have = new Set(card.tags.map((tag) => tag.toLowerCase()));
     const hit = selectedTags.some((tag) => have.has(tag.toLowerCase()));
@@ -96,10 +110,7 @@ export function normalizeCardFields(
   fallbackProjectId = FALLBACK_PROJECT_ID,
 ): Card {
   const parsed = parseUrl(typeof card.url === "string" ? card.url : "");
-  const projectId =
-    typeof card.projectId === "string"
-      ? card.projectId.trim()
-      : fallbackProjectId;
+  const projectId = typeof card.projectId === "string" ? card.projectId.trim() : fallbackProjectId;
   return {
     id: card.id,
     title: card.title,

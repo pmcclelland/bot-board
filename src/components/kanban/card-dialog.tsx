@@ -82,7 +82,6 @@ type CardDialogProps = {
   suggestions: string[];
   projects: Project[];
   people: Person[];
-  onCreateProject?: (name: string) => string | null | Promise<string | null>;
   onOpenChange: (open: boolean) => void;
   onSubmit: (draft: CardDraft) => void;
 };
@@ -94,7 +93,6 @@ export function CardDialog({
   suggestions,
   projects,
   people,
-  onCreateProject,
   onOpenChange,
   onSubmit,
 }: CardDialogProps) {
@@ -362,7 +360,6 @@ export function CardDialog({
                 projects={projects}
                 value={projectId}
                 onChange={setProjectId}
-                onCreate={onCreateProject}
               />
             </div>
 

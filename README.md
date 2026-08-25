@@ -15,7 +15,7 @@ Everyone who is **approved** shares one board. The first person to sign in becom
 ## Features
 
 - **Backlog + three lanes** — Park work in a collapsible Backlog list, then move it through To Do, Doing, and Done. Drag tasks, or use the lane switcher on smaller screens.
-- **Projects** — Optional grouping and filters.
+- **Projects** — GitHub repositories from the account connected in Settings. There is no free-text project list.
 - **Tasks** — Title and description required. Link, tags, and project optional.
 - **Persisted** — Postgres (Neon when deployed, PGLite in local preview).
 
@@ -31,10 +31,9 @@ All `/api/v1` routes need a session cookie or `Authorization: Bearer <token>`.
 | `PATCH` | `/api/v1/tasks/:id` | Update |
 | `DELETE` | `/api/v1/tasks/:id` | Delete |
 | `POST` | `/api/v1/tasks/:id/move` | Move (`columnId`, optional `projectId`, `beforeId`) |
-| `GET` | `/api/v1/projects` | List |
-| `POST` | `/api/v1/projects` | Create |
-| `PATCH` | `/api/v1/projects/:id` | Rename |
-| `DELETE` | `/api/v1/projects/:id` | Delete |
+| `GET` | `/api/v1/projects` | List GitHub-backed projects |
+
+`POST` / `PATCH` / `DELETE` `/api/v1/projects` return 422 — projects come from GitHub.
 | `GET` | `/api/v1/tokens` | List your tokens |
 | `POST` | `/api/v1/tokens` | Mint (secret shown once) |
 | `DELETE` | `/api/v1/tokens/:id` | Revoke |
@@ -47,7 +46,7 @@ Create body: `{ "title", "description", "columnId", "url?", "tags?", "projectId?
 
 `POST /api/mcp` with the same Bearer token.
 
-Tools: `list_board`, `create_task`, `get_task`, `update_task`, `delete_task`, `move_task`, `list_projects`, `create_project`, `rename_project`, `delete_project`.
+Tools: `list_board`, `create_task`, `get_task`, `update_task`, `delete_task`, `move_task`, `list_projects`. `create_project` / `rename_project` / `delete_project` remain registered but return an error — projects come from GitHub.
 
 Skill for Grok Bots: [`skills/bot-board/SKILL.md`](skills/bot-board/SKILL.md).
 
@@ -64,6 +63,30 @@ On a Grok App Builder deploy, Neon, Better Auth, and the Google/X broker credent
 - MCP: `https://<host>/api/mcp`
 
 If you deploy this repo to Vercel yourself, set at least `DATABASE_URL`, `BETTER_AUTH_URL` (the public origin), and `BETTER_AUTH_SECRET`.
+
+### GitHub projects
+
+Projects are the connected GitHub account's repositories. This is an account **link** for API access, not a sign-in method. Humans still sign in with Google or X.
+
+Create a GitHub OAuth App (User-to-server) and set:
+
+| Var | Purpose |
+| --- | --- |
+| `GITHUB_CLIENT_ID` | OAuth app client id |
+| `GITHUB_CLIENT_SECRET` | OAuth app client secret |
+
+GitHub connect builds `redirect_uri` from the **incoming request host** (`x-forwarded-host`, then `VERCEL_URL`). It does **not** use `BETTER_AUTH_URL` — that stays the Better Auth / broker origin for Google and X sign-in. Register **both** callback URLs on the GitHub OAuth App:
+
+```text
+https://botboard.pmcclel.land/api/github/callback
+https://bot-board-git-cursor-github-projects-e085-pmcclellands-projects.vercel.app/api/github/callback
+```
+
+Add any later preview host the same way: `https://<preview-host>/api/github/callback`.
+
+Requested scopes: `read:user` and `repo` (so private repos the user owns are included). The access token is encrypted at rest with `BETTER_AUTH_SECRET`.
+
+Any approved human can connect, reconnect, or disconnect. Connecting replaces the previous workspace connection. Bots cannot. After connect, owned repos (`affiliation=owner`, recently pushed first) become the project list. Local names such as Today are removed. If a repo disappears later, that project is hidden rather than deleted so existing tasks keep their id.
 
 **Google on a custom domain** uses native Google OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), not the Grok broker. Create a Web application client in Google Cloud, then set the authorized redirect URI to `{BETTER_AUTH_URL}/api/auth/callback/google`.
 

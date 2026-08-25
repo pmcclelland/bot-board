@@ -13,8 +13,9 @@ async function requireBoard(userId: string) {
 export const loadMembershipFn = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    const { ensureMember } = await import("./members.server");
-    return ensureMember(context.userId);
+    const { ensureMember, isBotUser } = await import("./members.server");
+    const member = await ensureMember(context.userId);
+    return { ...member, isBot: await isBotUser(context.userId) };
   });
 
 export const listMembersFn = createServerFn({ method: "GET" })
@@ -61,6 +62,8 @@ export const loadBoardFn = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     await requireBoard(context.userId);
+    const { syncGithubProjects } = await import("@/lib/github/sync.server");
+    await syncGithubProjects();
     const { getBoard } = await import("./service");
     return getBoard();
   });
@@ -179,4 +182,46 @@ export const revokeTokenFn = createServerFn({ method: "POST" })
     const { revokeToken } = await import("./tokens.server");
     await revokeToken(context.userId, data.id);
     return { ok: true };
+  });
+
+export const startGithubConnectFn = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { requireApprovedHuman } = await import("./members.server");
+    await requireApprovedHuman(context.userId);
+    const { startGithubAuthorize } = await import("@/lib/github/oauth.server");
+    return startGithubAuthorize();
+  });
+
+export const getGithubConnectionFn = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    await requireBoard(context.userId);
+    const { syncGithubProjects } = await import("@/lib/github/sync.server");
+    await syncGithubProjects();
+    const { githubOAuthConfigured } = await import("@/lib/github/env");
+    const { getWorkspaceConnection, toPublicConnection } = await import(
+      "@/lib/github/connection.server"
+    );
+    return toPublicConnection(
+      githubOAuthConfigured(),
+      await getWorkspaceConnection(),
+    );
+  });
+
+export const disconnectGithubFn = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { requireApprovedHuman } = await import("./members.server");
+    await requireApprovedHuman(context.userId);
+    const { archiveAllGithubProjects } = await import(
+      "@/lib/github/sync.server"
+    );
+    const { deleteWorkspaceConnection, toPublicConnection } = await import(
+      "@/lib/github/connection.server"
+    );
+    const { githubOAuthConfigured } = await import("@/lib/github/env");
+    await deleteWorkspaceConnection();
+    await archiveAllGithubProjects();
+    return toPublicConnection(githubOAuthConfigured(), null);
   });

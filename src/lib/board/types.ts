@@ -7,6 +7,7 @@ export type BoardColumnId = (typeof BOARD_COLUMN_IDS)[number];
 export type Project = {
   id: string;
   name: string;
+  githubFullName?: string;
 };
 
 export type Person = {
@@ -75,7 +76,9 @@ export const COLUMN_META: Record<
 
 export const MAX_TAGS = 8;
 export const MAX_TAG_LENGTH = 24;
-export const MAX_PROJECT_NAME = 32;
+export const MAX_PROJECT_NAME = 100;
+export const PROJECTS_FROM_GITHUB =
+  "Projects come from the connected GitHub account.";
 
 export function isColumnId(value: string): value is ColumnId {
   return (COLUMN_IDS as readonly string[]).includes(value);

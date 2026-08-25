@@ -4,7 +4,7 @@ import { parseUrl, uniqueTags } from "./card-fields";
 import { validateCardForm } from "./card-form";
 import {
   COLUMN_IDS,
-  MAX_PROJECT_NAME,
+  PROJECTS_FROM_GITHUB,
   isColumnId,
   type ColumnId,
   type Person,
@@ -173,9 +173,7 @@ async function resolveAssigneeId(
 
 export async function getBoard(): Promise<BoardSnapshot> {
   const sql = await getSql();
-  const projects = await sql<{ id: string; name: string }>`
-    select id, name from projects order by created_at asc
-  `;
+  const projects = await listProjects();
   const tasks = await sql.query<TaskSql>(
     `${TASK_SELECT} order by t.column_id, t.position, t.created_at`,
   );
@@ -209,7 +207,13 @@ async function resolveProjectId(projectId: string | undefined) {
   const trimmed = (projectId ?? "").trim();
   if (!trimmed) return null;
   const sql = await getSql();
-  const rows = await sql<{ id: string }>`select id from projects where id = ${trimmed} limit 1`;
+  const rows = await sql<{ id: string }>`
+    select id from projects
+    where id = ${trimmed}
+      and github_repo_id is not null
+      and archived_at is null
+    limit 1
+  `;
   if (!rows[0]) throw new ServiceError(422, "Unknown project.", "invalid_project");
   return trimmed;
 }
@@ -362,40 +366,38 @@ export async function moveTask(
 
 export async function listProjects(): Promise<Project[]> {
   const sql = await getSql();
-  return sql<{ id: string; name: string }>`select id, name from projects order by created_at asc`;
+  const rows = await sql<{
+    id: string;
+    name: string;
+    github_full_name: string | null;
+  }>`
+    select id, name, github_full_name from projects
+    where github_repo_id is not null and archived_at is null
+    order by github_pushed_at desc nulls last, lower(name) asc
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    githubFullName: row.github_full_name ?? undefined,
+  }));
 }
 
-export async function createProject(actor: Actor, name: string): Promise<Project> {
-  const trimmed = name.trim().slice(0, MAX_PROJECT_NAME);
-  if (!trimmed) throw new ServiceError(422, "Enter a project name.", "invalid");
-  const sql = await getSql();
-  const existing = await sql<{ id: string; name: string }>`
-    select id, name from projects where lower(name) = ${trimmed.toLowerCase()} limit 1
-  `;
-  if (existing[0]) return existing[0];
-  const id = newId("p");
-  await sql`
-    insert into projects (id, name, created_by) values (${id}, ${trimmed}, ${actor.userId})
-  `;
-  return { id, name: trimmed };
+export async function createProject(
+  _actor: Actor,
+  _name: string,
+): Promise<Project> {
+  throw new ServiceError(422, PROJECTS_FROM_GITHUB, "github_only");
 }
 
-export async function renameProject(id: string, name: string): Promise<Project> {
-  const trimmed = name.trim().slice(0, MAX_PROJECT_NAME);
-  if (!trimmed) throw new ServiceError(422, "Enter a project name.", "invalid");
-  const sql = await getSql();
-  const rows = await sql<{ id: string; name: string }>`
-    update projects set name = ${trimmed} where id = ${id} returning id, name
-  `;
-  if (!rows[0]) throw new ServiceError(404, "Project not found", "not_found");
-  return rows[0];
+export async function renameProject(
+  _id: string,
+  _name: string,
+): Promise<Project> {
+  throw new ServiceError(422, PROJECTS_FROM_GITHUB, "github_only");
 }
 
-export async function deleteProject(id: string) {
-  const sql = await getSql();
-  await sql`update tasks set project_id = null where project_id = ${id}`;
-  const rows = await sql<{ id: string }>`delete from projects where id = ${id} returning id`;
-  if (!rows[0]) throw new ServiceError(404, "Project not found", "not_found");
+export async function deleteProject(_id: string) {
+  throw new ServiceError(422, PROJECTS_FROM_GITHUB, "github_only");
 }
 
 export { COLUMN_IDS };

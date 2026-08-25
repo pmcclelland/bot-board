@@ -87,12 +87,14 @@ const TOOLS = [
   },
   {
     name: "list_projects",
-    description: "List projects on the shared board.",
+    description:
+      "List projects on the shared board. Projects are GitHub repositories from the connected account.",
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "create_project",
-    description: "Create a project, or return the existing one with the same name.",
+    description:
+      "Unavailable. Projects come from the connected GitHub account and cannot be created by name.",
     inputSchema: {
       type: "object",
       properties: { name: { type: "string" } },
@@ -101,7 +103,8 @@ const TOOLS = [
   },
   {
     name: "rename_project",
-    description: "Rename a project.",
+    description:
+      "Unavailable. Project names follow the GitHub repository name.",
     inputSchema: {
       type: "object",
       properties: { id: { type: "string" }, name: { type: "string" } },
@@ -110,7 +113,8 @@ const TOOLS = [
   },
   {
     name: "delete_project",
-    description: "Delete a project. Its tasks stay on the board without a project.",
+    description:
+      "Unavailable. Projects follow the connected GitHub repositories.",
     inputSchema: {
       type: "object",
       properties: { id: { type: "string" } },

@@ -37,7 +37,6 @@ type BoardState = {
   relocateCard: (id: string, next: Relocate) => void;
   setColumns: (columns: Columns) => void;
   findColumn: (id: string) => ColumnId | null;
-  addProject: (name: string) => Promise<string | null>;
 };
 
 function stamp() {
@@ -254,15 +253,5 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
           return id as ColumnId;
         }
         return columnOf(get().columns, id);
-      },
-      addProject: async (name) => {
-        const { createProjectFn } = await import("./server-fns");
-        const project = await createProjectFn({ data: { name } });
-        set((state) => ({
-          projects: state.projects.some((item) => item.id === project.id)
-            ? state.projects
-            : [...state.projects, project],
-        }));
-        return project.id;
       },
 }));

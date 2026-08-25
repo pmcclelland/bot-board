@@ -10,7 +10,12 @@
  * holds the real Google/X secrets. The app never sees them — it only knows its
  * own per-app client id/secret and which upstream to ask the broker for (`idp`).
  *
- * To add an upstream (e.g. GitHub) once the broker supports it: add one entry
+ * GitHub is NOT a sign-in method here. The shared board links one GitHub
+ * account in Settings (`GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`) for repo
+ * access. Do not add `grok-github` to this list unless the broker should also
+ * become a login provider.
+ *
+ * To add an upstream for sign-in once the broker supports it: add one entry
  * here (`{ providerId: "grok-github", idp: "github", label: "GitHub" }`). The
  * `providerId` is this app's local id and the OAuth callback path segment
  * (`/api/auth/oauth2/callback/<providerId>`); `idp` is the hint the broker reads

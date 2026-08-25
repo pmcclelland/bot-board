@@ -28,7 +28,7 @@ export function snapshotFingerprint(snapshot: BoardSnapshot): string {
     .sort()
     .join("\n");
   const projects = snapshot.projects
-    .map((project) => `${project.id}:${project.name}`)
+    .map((project) => `${project.id}:${project.name}:${project.githubFullName ?? ""}`)
     .join("|");
   const people = (snapshot.people ?? [])
     .map((person) => `${person.userId}:${person.name}:${person.image ?? ""}`)

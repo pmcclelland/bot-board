@@ -12,7 +12,12 @@
   --color-surface: #151b22;
   --color-elevated: #1e262f;
   --color-card: #242c36;
+  --color-chip: #323b47;
   --color-muted: #b4b8c0;
+  --text-dek: 13px;
+  --text-dek--line-height: 18px;
+  --text-chip: 11px;
+  --text-chip--line-height: 16px;
   --color-subtle: #838993;
   --color-border: rgb(243 240 232 / 0.14);
   --color-primary: #2fd3c4;
@@ -34,6 +39,7 @@
 
   --shadow-border: 0 0 0 1px rgb(255 255 255 / 0.1);
   --shadow-border-hover: 0 0 0 1px rgb(47 211 196 / 0.35);
+  --shadow-hairline: 0 0 0 1px rgb(255 255 255 / 0.07);
   --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.35);
   --shadow-lift: 0 0 0 1px rgb(47 211 196 / 0.22), 0 18px 40px rgb(0 0 0 / 0.45);
 
@@ -102,10 +108,7 @@
 
   .board-shell::before {
     background-image:
-      linear-gradient(
-        color-mix(in oklab, var(--color-fg) 7%, transparent) 1px,
-        transparent 1px
-      ),
+      linear-gradient(color-mix(in oklab, var(--color-fg) 7%, transparent) 1px, transparent 1px),
       linear-gradient(
         90deg,
         color-mix(in oklab, var(--color-fg) 7%, transparent) 1px,
@@ -126,11 +129,7 @@
       7.5rem 7.5rem,
       7.5rem 7.5rem;
     background-position: center top;
-    mask-image: radial-gradient(
-      ellipse 90% 80% at 50% 28%,
-      black 20%,
-      transparent 78%
-    );
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 28%, black 20%, transparent 78%);
     opacity: 0.55;
   }
 
@@ -181,6 +180,18 @@
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
+  }
+
+  .kanban-card-chip {
+    height: 18px;
+    max-width: 7rem;
+    padding-inline: 6px;
+    border-radius: 999px;
+    background-color: var(--color-chip);
+    color: var(--color-muted);
+    font-size: var(--text-chip);
+    font-weight: 500;
+    line-height: var(--text-chip--line-height);
   }
 
   .bot-mark-shell {

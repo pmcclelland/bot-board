@@ -13,6 +13,7 @@ type ProjectSelectProps = {
   projects: Project[];
   value: string;
   onChange: (id: string) => void;
+  tone?: "field" | "plain";
 };
 
 export function ProjectSelect({
@@ -20,6 +21,7 @@ export function ProjectSelect({
   projects,
   value,
   onChange,
+  tone = "field",
 }: ProjectSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -69,16 +71,27 @@ export function ProjectSelect({
           role="combobox"
           aria-expanded={open}
           aria-controls="project-select-list"
+          aria-label="Project"
           className={cn(
-            "flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-sm bg-elevated px-3 text-left text-base text-fg shadow-[var(--shadow-border)] outline-none",
-            "transition-[box-shadow,background-color] duration-150 ease-out",
-            "focus-visible:ring-2 focus-visible:ring-ring/70 md:text-sm",
+            "flex w-full min-w-0 items-center text-left outline-none",
+            "focus-visible:ring-2 focus-visible:ring-ring/70",
+            tone === "plain"
+              ? "min-h-11 justify-start py-0 text-dek md:min-h-6"
+              : "h-11 justify-between gap-2 rounded-sm bg-elevated px-3 text-base text-fg shadow-[var(--shadow-border)] transition-[box-shadow,background-color] duration-150 ease-out md:text-sm",
           )}
         >
-          <span className={cn("truncate", !selected && "text-subtle")}>
+          <span
+            className={cn(
+              "truncate",
+              !selected && "text-subtle",
+              tone === "plain" && selected && "text-fg",
+            )}
+          >
             {selected?.name ?? "No project"}
           </span>
-          <ChevronDown className="size-4 shrink-0 text-subtle" />
+          {tone === "field" ? (
+            <ChevronDown className="size-4 shrink-0 text-subtle" />
+          ) : null}
         </button>
       </PopoverTrigger>
       <PopoverContent

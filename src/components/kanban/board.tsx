@@ -22,7 +22,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navigate } from "@tanstack/react-router";
 import { RedirectToSignIn } from "@/lib/auth/gates";
@@ -46,6 +46,7 @@ import {
 } from "@/lib/board/server-fns";
 import { snapshotFingerprint, snapshotToState } from "@/lib/board/snapshot";
 import { useBoardStore } from "@/lib/board/store";
+import { draftFromCard, emptyCardDraft } from "@/lib/board/card-draft";
 import { cardMatches, collectTags } from "@/lib/board/card-fields";
 import {
   BOARD_COLUMN_IDS,
@@ -59,6 +60,7 @@ import {
 import { BacklogCardView, BacklogList } from "./backlog-list";
 import { BoardHeading } from "./board-heading";
 import { CardDialog, type CardDraft } from "./card-dialog";
+import { CardSheet } from "./card-sheet";
 import { BoardFilters } from "./filters";
 import { BoardHeader } from "./header";
 import { KanbanCardView } from "./kanban-card";
@@ -152,6 +154,26 @@ export function KanbanBoard() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const editTriggerRef = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    const node = headerRef.current;
+    if (!node) return;
+    const sync = () => {
+      const top = Math.round(node.getBoundingClientRect().bottom);
+      document.documentElement.style.setProperty("--board-chrome-top", `${top}px`);
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(node);
+    window.addEventListener("resize", sync);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", sync);
+      document.documentElement.style.removeProperty("--board-chrome-top");
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -208,18 +230,11 @@ export function KanbanBoard() {
 
   const openCreate = useCallback(
     (columnId: ColumnId = activeLane) => {
+      editTriggerRef.current = null;
       setDialog({
         open: true,
         mode: "create",
-        draft: {
-          title: "",
-          description: "",
-          url: "",
-          tags: [],
-          columnId,
-          projectId: selectedProjectId ?? "",
-          assigneeId: "",
-        },
+        draft: emptyCardDraft(columnId, selectedProjectId ?? ""),
       });
     },
     [activeLane, selectedProjectId],
@@ -229,20 +244,13 @@ export function KanbanBoard() {
     const card = useBoardStore.getState().cards[id];
     const columnId = useBoardStore.getState().findColumn(id) ?? "todo";
     if (!card) return;
+    const active = document.activeElement;
+    editTriggerRef.current = active instanceof HTMLElement ? active : null;
     setDialog({
       open: true,
       mode: "edit",
       cardId: id,
-      draft: {
-        title: card.title,
-        description: card.description,
-        url: card.url ?? "",
-        tags: card.tags ?? [],
-        columnId,
-        projectId: card.projectId ?? "",
-        assigneeId: card.assigneeId ?? "",
-        creator: card.creator,
-      },
+      draft: draftFromCard(card, columnId),
     });
   }, []);
 
@@ -457,14 +465,19 @@ export function KanbanBoard() {
 
   return (
     <div className="board-shell flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 px-3 py-3 md:gap-6 md:px-8 md:py-8">
+      <div
+        ref={headerRef}
+        className="mx-auto mb-3 w-full max-w-6xl px-3 pt-3 md:mb-6 md:px-8 md:pt-8"
+      >
         <BoardHeader
           isAdmin={isAdmin}
           onAdd={() =>
             openCreate(activeLane === "backlog" ? "todo" : activeLane)
           }
         />
+      </div>
 
+      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 px-3 pb-3 md:gap-6 md:px-8 md:pb-8">
         <BoardFilters
           query={query}
           tags={allTags}
@@ -566,16 +579,32 @@ export function KanbanBoard() {
         </div>
       </div>
 
-      <CardDialog
-        open={dialog.open}
-        mode={dialog.mode}
-        initial={dialog.draft}
-        suggestions={allTags}
-        projects={projects}
-        people={people}
-        onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
-        onSubmit={handleDialogSubmit}
-      />
+      {dialog.mode === "create" ? (
+        <CardDialog
+          open={dialog.open}
+          mode="create"
+          initial={dialog.draft}
+          suggestions={allTags}
+          projects={projects}
+          people={people}
+          onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
+          onSubmit={handleDialogSubmit}
+        />
+      ) : (
+        <CardSheet
+          open={dialog.open}
+          initial={dialog.draft}
+          suggestions={allTags}
+          projects={projects}
+          people={people}
+          onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
+          onSubmit={handleDialogSubmit}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            editTriggerRef.current?.focus();
+          }}
+        />
+      )}
 
       <AlertDialog
         open={Boolean(pendingDelete)}

@@ -13,6 +13,7 @@ type AssigneeSelectProps = {
   people: Person[];
   value: string;
   onChange: (userId: string) => void;
+  tone?: "field" | "plain";
 };
 
 export function AssigneeSelect({
@@ -20,6 +21,7 @@ export function AssigneeSelect({
   people,
   value,
   onChange,
+  tone = "field",
 }: AssigneeSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -54,16 +56,47 @@ export function AssigneeSelect({
           role="combobox"
           aria-expanded={open}
           aria-controls="assignee-select-list"
+          aria-label="Assignee"
           className={cn(
-            "flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-sm bg-elevated px-3 text-left text-base text-fg shadow-[var(--shadow-border)] outline-none",
-            "transition-[box-shadow,background-color] duration-150 ease-out",
-            "focus-visible:ring-2 focus-visible:ring-ring/70 md:text-sm",
+            "flex w-full min-w-0 items-center text-left outline-none",
+            "focus-visible:ring-2 focus-visible:ring-ring/70",
+            tone === "plain"
+              ? "min-h-11 justify-start gap-2 py-0 md:min-h-6"
+              : "h-11 justify-between gap-2 rounded-sm bg-elevated px-3 text-base text-fg shadow-[var(--shadow-border)] transition-[box-shadow,background-color] duration-150 ease-out md:text-sm",
           )}
         >
-          <span className={cn("truncate", !selected && "text-subtle")}>
-            {selected?.name ?? "Unassigned"}
-          </span>
-          <ChevronDown className="size-4 shrink-0 text-subtle" />
+          {tone === "plain" ? (
+            <>
+              {selected ? (
+                <span className="grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-elevated text-chip font-semibold text-fg">
+                  {selected.image ? (
+                    <img
+                      src={selected.image}
+                      alt=""
+                      className="size-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    selected.name.charAt(0).toUpperCase()
+                  )}
+                </span>
+              ) : null}
+              <span
+                className={cn(
+                  "truncate text-dek",
+                  selected ? "text-fg" : "text-subtle",
+                )}
+              >
+                {selected?.name ?? "Unassigned"}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={cn("truncate", !selected && "text-subtle")}>
+                {selected?.name ?? "Unassigned"}
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-subtle" />
+            </>
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent

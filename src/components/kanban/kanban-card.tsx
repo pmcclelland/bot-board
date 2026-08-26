@@ -72,20 +72,17 @@ export function KanbanCardView({
     >
       <div className="flex items-start gap-1">
         <div className="min-w-0 flex-1">
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={() => onEdit(card.id)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
+                event.stopPropagation();
                 onEdit(card.id);
               }
             }}
-            className={cn(
-              "w-full rounded-sm py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
-              canDrag && "cursor-grab active:cursor-grabbing",
-            )}
+            className="w-full cursor-pointer rounded-sm py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
           >
             <h3 className="line-clamp-2 text-base leading-snug font-semibold text-balance text-fg">
               {card.title}
@@ -95,7 +92,7 @@ export function KanbanCardView({
                 {card.description}
               </p>
             ) : null}
-          </div>
+          </button>
         </div>
 
         <DropdownMenu>

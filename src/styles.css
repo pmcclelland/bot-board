@@ -36,6 +36,7 @@
   --radius-xl: 1.5rem;
   --radius-column: 1.25rem;
   --radius-dialog: 1rem;
+  --width-task-sheet: 22.5rem;
 
   --shadow-border: 0 0 0 1px rgb(255 255 255 / 0.1);
   --shadow-border-hover: 0 0 0 1px rgb(47 211 196 / 0.35);
@@ -83,6 +84,10 @@
 
   input[type="search"]::-webkit-search-cancel-button {
     appearance: none;
+  }
+
+  .field-sizing-content {
+    field-sizing: content;
   }
 }
 

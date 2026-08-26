@@ -1,19 +1,14 @@
-import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { parseUrl, uniqueTags } from "@/lib/board/card-fields";
-import {
-  firstCardFormError,
-  validateCardForm,
-} from "@/lib/board/card-form";
+import type { CardDraft } from "@/lib/board/card-draft";
+import { useCardForm } from "@/lib/board/use-card-form";
 import {
   COLUMN_IDS,
   COLUMN_META,
   MAX_TAGS,
-  type ColumnId,
   type Person,
   type Project,
 } from "@/lib/board/types";
@@ -22,7 +17,7 @@ import { AssigneeSelect } from "./assignee-select";
 import { ProjectSelect } from "./project-select";
 import { TagChip } from "./tag-chip";
 
-type FieldKey = "title" | "description" | "url" | "columnId";
+export type { CardDraft };
 
 function FieldLabel({
   htmlFor,
@@ -64,17 +59,6 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
-export type CardDraft = {
-  title: string;
-  description: string;
-  url: string;
-  tags: string[];
-  columnId: ColumnId;
-  projectId: string;
-  assigneeId: string;
-  creator?: string;
-};
-
 type CardDialogProps = {
   open: boolean;
   mode: "create" | "edit";
@@ -96,100 +80,14 @@ export function CardDialog({
   onOpenChange,
   onSubmit,
 }: CardDialogProps) {
-  const [title, setTitle] = useState(initial.title);
-  const [description, setDescription] = useState(initial.description);
-  const [url, setUrl] = useState(initial.url);
-  const [tags, setTags] = useState<string[]>(initial.tags);
-  const [tagDraft, setTagDraft] = useState("");
-  const [columnId, setColumnId] = useState<ColumnId>(initial.columnId);
-  const [projectId, setProjectId] = useState(initial.projectId);
-  const [assigneeId, setAssigneeId] = useState(initial.assigneeId);
-  const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>(
-    {},
-  );
-  const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setTitle(initial.title);
-    setDescription(initial.description);
-    setUrl(initial.url);
-    setTags(initial.tags);
-    setTagDraft("");
-    setColumnId(initial.columnId);
-    setProjectId(initial.projectId);
-    setAssigneeId(initial.assigneeId);
-    setTouched({});
-    setSubmitted(false);
-  }, [open, initial]);
-
-  function addTag(raw: string) {
-    const next = uniqueTags([...tags, raw]);
-    setTags(next);
-    setTagDraft("");
-  }
-
-  function handleTagKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" || event.key === ",") {
-      event.preventDefault();
-      if (tagDraft.trim()) addTag(tagDraft);
-    }
-    if (event.key === "Backspace" && !tagDraft && tags.length > 0) {
-      setTags(tags.slice(0, -1));
-    }
-  }
-
-  function markTouched(field: FieldKey) {
-    setTouched((current) => ({ ...current, [field]: true }));
-  }
-
-  function shownError(field: FieldKey) {
-    if (!(submitted || touched[field])) return undefined;
-    return errors[field];
-  }
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setSubmitted(true);
-    const nextErrors = validateCardForm({
-      title,
-      description,
-      url,
-      columnId,
-    });
-    const first = firstCardFormError(nextErrors);
-    if (first) {
-      const focusId = {
-        title: "card-title",
-        description: "card-description",
-        url: "card-url",
-        columnId: "card-column-first",
-      }[first];
-      document.getElementById(focusId)?.focus();
-      return;
-    }
-    const parsed = parseUrl(url);
-    if (!parsed.ok) return;
-    onSubmit({
-      title: title.trim(),
-      description: description.trim(),
-      url: parsed.url,
-      tags: uniqueTags([...tags, tagDraft]),
-      columnId,
-      projectId: projectId.trim(),
-      assigneeId: assigneeId.trim(),
-    });
-    onOpenChange(false);
-  }
-
+  const form = useCardForm({ open, initial, onSubmit, onOpenChange });
+  const titleError = form.shownError("title");
+  const descriptionError = form.shownError("description");
+  const urlError = form.shownError("url");
+  const columnError = form.shownError("columnId");
   const unusedSuggestions = suggestions.filter(
-    (tag) => !tags.some((item) => item.toLowerCase() === tag.toLowerCase()),
+    (tag) => !form.tags.some((item) => item.toLowerCase() === tag.toLowerCase()),
   );
-  const errors = validateCardForm({ title, description, url, columnId });
-  const titleError = shownError("title");
-  const descriptionError = shownError("description");
-  const urlError = shownError("url");
-  const columnError = shownError("columnId");
 
   return (
     <Modal
@@ -203,7 +101,7 @@ export function CardDialog({
             ? `Created by ${initial.creator}. Update the notes, assignee, or lane.`
             : "Update the notes, assignee, link, tags, or move it to another lane."
       }
-      onSubmit={handleSubmit}
+      onSubmit={form.handleSubmit}
       footer={
         <>
           <Button
@@ -226,9 +124,9 @@ export function CardDialog({
               </FieldLabel>
               <Input
                 id="card-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                onBlur={() => markTouched("title")}
+                value={form.title}
+                onChange={(event) => form.setTitle(event.target.value)}
+                onBlur={() => form.markTouched("title")}
                 placeholder="What needs to happen?"
                 maxLength={120}
                 autoFocus
@@ -245,9 +143,9 @@ export function CardDialog({
               </FieldLabel>
               <Textarea
                 id="card-description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                onBlur={() => markTouched("description")}
+                value={form.description}
+                onChange={(event) => form.setDescription(event.target.value)}
+                onBlur={() => form.markTouched("description")}
                 placeholder="Notes, context, or next steps."
                 maxLength={600}
                 aria-required
@@ -269,8 +167,8 @@ export function CardDialog({
               <AssigneeSelect
                 id="card-assignee"
                 people={people}
-                value={assigneeId}
-                onChange={setAssigneeId}
+                value={form.assigneeId}
+                onChange={form.setAssigneeId}
               />
             </div>
 
@@ -283,9 +181,9 @@ export function CardDialog({
                 type="text"
                 inputMode="url"
                 autoComplete="url"
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                onBlur={() => markTouched("url")}
+                value={form.url}
+                onChange={(event) => form.setUrl(event.target.value)}
+                onBlur={() => form.markTouched("url")}
                 placeholder="https://example.com"
                 spellCheck={false}
                 aria-invalid={Boolean(urlError)}
@@ -305,15 +203,15 @@ export function CardDialog({
               <FieldLabel htmlFor="card-tags" optional>
                 Tags
               </FieldLabel>
-              {tags.length > 0 ? (
+              {form.tags.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {tags.map((tag) => (
+                  {form.tags.map((tag) => (
                     <TagChip
                       key={tag.toLowerCase()}
                       label={tag}
                       onRemove={() =>
-                        setTags(
-                          tags.filter(
+                        form.setTags(
+                          form.tags.filter(
                             (item) => item.toLowerCase() !== tag.toLowerCase(),
                           ),
                         )
@@ -324,19 +222,19 @@ export function CardDialog({
               ) : null}
               <Input
                 id="card-tags"
-                value={tagDraft}
-                onChange={(event) => setTagDraft(event.target.value)}
-                onKeyDown={handleTagKeyDown}
+                value={form.tagDraft}
+                onChange={(event) => form.setTagDraft(event.target.value)}
+                onKeyDown={form.handleTagKeyDown}
                 onBlur={() => {
-                  if (tagDraft.trim()) addTag(tagDraft);
+                  if (form.tagDraft.trim()) form.addTag(form.tagDraft);
                 }}
                 placeholder={
-                  tags.length >= MAX_TAGS
+                  form.tags.length >= MAX_TAGS
                     ? "Tag limit reached"
                     : "Type a tag, then Enter"
                 }
                 maxLength={24}
-                disabled={tags.length >= MAX_TAGS}
+                disabled={form.tags.length >= MAX_TAGS}
               />
               {unusedSuggestions.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
@@ -344,7 +242,7 @@ export function CardDialog({
                     <TagChip
                       key={tag.toLowerCase()}
                       label={tag}
-                      onSelect={() => addTag(tag)}
+                      onSelect={() => form.addTag(tag)}
                     />
                   ))}
                 </div>
@@ -358,8 +256,8 @@ export function CardDialog({
               <ProjectSelect
                 id="card-project"
                 projects={projects}
-                value={projectId}
-                onChange={setProjectId}
+                value={form.projectId}
+                onChange={form.setProjectId}
               />
             </div>
 
@@ -381,15 +279,15 @@ export function CardDialog({
                 }
               >
                 {COLUMN_IDS.map((id) => {
-                  const selected = columnId === id;
+                  const selected = form.columnId === id;
                   return (
                     <button
                       key={id}
                       id={id === COLUMN_IDS[0] ? "card-column-first" : undefined}
                       type="button"
                       onClick={() => {
-                        setColumnId(id);
-                        markTouched("columnId");
+                        form.setColumnId(id);
+                        form.markTouched("columnId");
                       }}
                       className={cn(
                         "flex h-11 items-center justify-center rounded-sm text-sm font-medium transition-[background-color,color] duration-150 ease-out",

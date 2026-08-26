@@ -4,6 +4,9 @@ import {
   authorizationServerMetadata,
   handleWellKnown,
   isAllowedRedirectUri,
+  isOAuthWellKnownPath,
+  isOauthPostOnlyPath,
+  oauthMethodNotAllowed,
   parseAuthorizeParams,
   protectedResourceMetadata,
   wellKnownKind,
@@ -35,8 +38,44 @@ describe("wellKnownKind", () => {
     );
   });
 
+  it("serves the same documents at the /api/mcp resource-path probes", () => {
+    assert.equal(
+      wellKnownKind("/api/mcp/.well-known/oauth-authorization-server"),
+      "authorization-server",
+    );
+    assert.equal(
+      wellKnownKind("/api/mcp/.well-known/openid-configuration"),
+      "authorization-server",
+    );
+    assert.equal(
+      wellKnownKind("/api/mcp/.well-known/oauth-protected-resource"),
+      "protected-resource",
+    );
+  });
+
   it("does not invent other well-known documents", () => {
     assert.equal(wellKnownKind("/.well-known/unknown"), "not-found");
+  });
+});
+
+describe("isOAuthWellKnownPath", () => {
+  it("intercepts origin-root and resource-path metadata probes", () => {
+    assert.equal(isOAuthWellKnownPath("/.well-known/oauth-authorization-server"), true);
+    assert.equal(
+      isOAuthWellKnownPath("/api/mcp/.well-known/oauth-authorization-server"),
+      true,
+    );
+    assert.equal(isOAuthWellKnownPath("/api/mcp"), false);
+    assert.equal(isOAuthWellKnownPath("/oauth/authorize"), false);
+  });
+});
+
+describe("isOauthPostOnlyPath", () => {
+  it("marks token, register, revoke, and decision as POST-only", () => {
+    assert.equal(isOauthPostOnlyPath("/oauth/token"), true);
+    assert.equal(isOauthPostOnlyPath("/oauth/register"), true);
+    assert.equal(isOauthPostOnlyPath("/oauth/decision"), true);
+    assert.equal(isOauthPostOnlyPath("/oauth/authorize"), false);
   });
 });
 
@@ -127,6 +166,35 @@ describe("handleWellKnown", () => {
     const body = (await response.json()) as { issuer: string; registration_endpoint: string };
     assert.equal(body.issuer, "https://botboard.pmcclel.land");
     assert.equal(body.registration_endpoint, "https://botboard.pmcclel.land/oauth/register");
+  });
+
+  it("returns the same RFC 8414 JSON at /api/mcp/.well-known/oauth-authorization-server", async () => {
+    const response = handleWellKnown(
+      new Request(
+        "https://botboard.pmcclel.land/api/mcp/.well-known/oauth-authorization-server",
+        {
+          headers: {
+            "x-forwarded-host": "botboard.pmcclel.land",
+            "x-forwarded-proto": "https",
+          },
+        },
+      ),
+    );
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type") ?? "", /application\/json/);
+    const body = (await response.json()) as { issuer: string; token_endpoint: string };
+    assert.equal(body.issuer, "https://botboard.pmcclel.land");
+    assert.equal(body.token_endpoint, "https://botboard.pmcclel.land/oauth/token");
+  });
+});
+
+describe("oauthMethodNotAllowed", () => {
+  it("returns 405 JSON so GET cannot fall through to the app shell", async () => {
+    const response = oauthMethodNotAllowed("POST");
+    assert.equal(response.status, 405);
+    assert.match(response.headers.get("content-type") ?? "", /application\/json/);
+    const body = (await response.json()) as { error: string };
+    assert.equal(body.error, "invalid_request");
   });
 });
 

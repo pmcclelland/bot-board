@@ -64,12 +64,19 @@ function pgliteBootstrapPlugin(): Plugin {
 function isOAuthWellKnownPath(path: string) {
   const normalized = path.replace(/\/+$/, "") || "/";
   return (
-    normalized === "/.well-known/oauth-authorization-server" ||
-    normalized === "/.well-known/oauth-authorization-server/api/mcp" ||
-    normalized === "/.well-known/oauth-protected-resource" ||
-    normalized === "/.well-known/oauth-protected-resource/api/mcp" ||
-    normalized === "/.well-known/openid-configuration" ||
-    normalized === "/.well-known/openid-configuration/api/mcp"
+    normalized.startsWith("/.well-known/oauth-") ||
+    normalized.startsWith("/.well-known/openid-configuration") ||
+    normalized.startsWith("/api/mcp/.well-known/")
+  );
+}
+
+function isOauthPostOnlyPath(path: string) {
+  const normalized = path.replace(/\/+$/, "") || "/";
+  return (
+    normalized === "/oauth/token" ||
+    normalized === "/oauth/register" ||
+    normalized === "/oauth/revoke" ||
+    normalized === "/oauth/decision"
   );
 }
 
@@ -87,11 +94,23 @@ function mcpOauthWellKnownPlugin(): Plugin {
         try {
           const rawUrl = req.url ?? "";
           const pathOnly = rawUrl.split("?", 1)[0] ?? "";
+          const method = (req.method ?? "GET").toUpperCase();
+          if (isOauthPostOnlyPath(pathOnly) && method !== "POST" && method !== "OPTIONS") {
+            res.statusCode = 405;
+            res.setHeader("content-type", "application/json; charset=utf-8");
+            res.setHeader("allow", "POST");
+            res.end(
+              JSON.stringify({
+                error: "invalid_request",
+                error_description: "Use POST.",
+              }),
+            );
+            return;
+          }
           if (!isOAuthWellKnownPath(pathOnly)) {
             next();
             return;
           }
-          const method = (req.method ?? "GET").toUpperCase();
           if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
             res.statusCode = 405;
             res.setHeader("content-type", "application/json; charset=utf-8");

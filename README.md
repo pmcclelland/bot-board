@@ -53,6 +53,7 @@ Create body: `{ "title", "description", "columnId", "url?", "tags?", "projectId?
 | Discovery | Purpose |
 | --- | --- |
 | `GET /.well-known/oauth-authorization-server` | RFC 8414 metadata (authorization, token, register) |
+| `GET /api/mcp/.well-known/oauth-authorization-server` | Same document — some clients append `.well-known` to the MCP URL |
 | `GET /.well-known/oauth-protected-resource` | RFC 9728 resource metadata for `/api/mcp` |
 | `POST /oauth/register` | Dynamic client registration (Cursor does not need a pre-registered client id) |
 | `GET /oauth/authorize` | Sign in + consent as the Bot Board user |

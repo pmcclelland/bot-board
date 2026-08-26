@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ArrowRight, Link2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCompactAge, linkLabel, parseUrl } from "@/lib/board/card-fields";
+import { dekOverflows } from "@/lib/board/dek";
 import { COLUMN_IDS, COLUMN_META, type Card, type ColumnId } from "@/lib/board/types";
 import { cn } from "@/lib/utils";
 import { TagChip } from "./tag-chip";
@@ -28,8 +29,84 @@ type KanbanCardProps = {
   onToggleTag?: (tag: string) => void;
 };
 
+const DEK_CLAMP_LINES = 2;
+const DEK_LINE_FALLBACK = 18;
+
 function stopDrag(event: { stopPropagation: () => void }) {
   event.stopPropagation();
+}
+
+function CardDek({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [text]);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const measure = () => {
+      const lineHeight =
+        Number.parseFloat(getComputedStyle(el).lineHeight) || DEK_LINE_FALLBACK;
+      const collapsedHeight = lineHeight * DEK_CLAMP_LINES;
+      const visibleHeight = expanded ? collapsedHeight : el.clientHeight;
+      setOverflows(dekOverflows(el.scrollHeight, visibleHeight));
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text, expanded]);
+
+  useLayoutEffect(() => {
+    if (!overflows && expanded) setExpanded(false);
+  }, [overflows, expanded]);
+
+  function toggle() {
+    setExpanded((open) => !open);
+  }
+
+  return (
+    <p
+      ref={ref}
+      className={`text-dek ${cn(
+        "mt-2 font-normal text-pretty text-muted",
+        expanded ? "max-h-64 overflow-y-auto" : "line-clamp-2",
+        overflows && "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
+      )}`}
+      role={overflows ? "button" : undefined}
+      tabIndex={overflows ? 0 : undefined}
+      aria-expanded={overflows ? expanded : undefined}
+      onClick={
+        overflows
+          ? (event) => {
+              event.stopPropagation();
+              toggle();
+            }
+          : undefined
+      }
+      onKeyDown={
+        overflows
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                toggle();
+              }
+            }
+          : undefined
+      }
+      onPointerDown={overflows ? stopDrag : undefined}
+      onTouchStart={overflows ? stopDrag : undefined}
+    >
+      {text}
+    </p>
+  );
 }
 
 export function KanbanCardView({
@@ -90,12 +167,8 @@ export function KanbanCardView({
             <h3 className="line-clamp-2 text-base leading-snug font-semibold text-balance text-fg">
               {card.title}
             </h3>
-            {card.description ? (
-              <p className="text-dek mt-2 line-clamp-2 font-normal text-pretty text-muted">
-                {card.description}
-              </p>
-            ) : null}
           </div>
+          {card.description ? <CardDek text={card.description} /> : null}
         </div>
 
         <DropdownMenu>

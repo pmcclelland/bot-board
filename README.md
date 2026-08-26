@@ -44,13 +44,35 @@ Create body: `{ "title", "description", "columnId", "url?", "tags?", "projectId?
 
 ## MCP
 
-`POST /api/mcp` with the same Bearer token.
+`POST /api/mcp` — one URL for every bot. Do not add a second MCP path per account.
+
+**Bearer API tokens** still work (`Authorization: Bearer bb_…`) for skills, curl, and routines.
+
+**Cursor multi-account** uses MCP OAuth on that same URL. Each Cursor `account_label` signs in as a Bot Board user; writes stamp `createdBy` / `updatedBy` as that user.
+
+| Discovery | Purpose |
+| --- | --- |
+| `GET /.well-known/oauth-authorization-server` | RFC 8414 metadata (authorization, token, register) |
+| `GET /.well-known/oauth-protected-resource` | RFC 9728 resource metadata for `/api/mcp` |
+| `POST /oauth/register` | Dynamic client registration (Cursor does not need a pre-registered client id) |
+| `GET /oauth/authorize` | Sign in + consent as the Bot Board user |
+| `POST /oauth/token` | Authorization code + PKCE S256, refresh tokens |
 
 Tools: `list_board`, `create_task`, `get_task`, `update_task`, `delete_task`, `move_task`, `list_projects`. `create_project` / `rename_project` / `delete_project` remain registered but return an error — projects come from GitHub.
 
 Skill for Grok Bots: [`skills/bot-board/SKILL.md`](skills/bot-board/SKILL.md).
 
-In Grok Bot, add a custom MCP connector pointing at `https://<host>/api/mcp` with `Authorization: Bearer <token>`.
+### Connect a second Cursor account
+
+Keep a single Bot Board connector pointed at `https://<host>/api/mcp` (production or the same path on a Vercel preview). Then add another account on that connector:
+
+1. Run `AuthenticateMcpServer` with `account_label` set to the bot (`atelier`, `forge`, `alfred`, `leo`, `gage`, `scout`, …). Cursor creates `user-BotBoard--<label>`.
+2. Complete the OAuth sign-in in the browser as that Bot Board user (Google for humans, username/password for bots). The consent screen shows the account that will be stamped on writes.
+3. Tools load for that account. A write from Atelier’s account stamps `createdBy` / `updatedBy` as Atelier, not whoever minted a shared API token.
+
+Channel/secret credentials are not sent as MCP headers. Do not put one bot’s `bb_` token on the shared connector if you want per-bot stamps — use OAuth accounts instead.
+
+In Grok Bot (single identity), a custom MCP connector at `https://<host>/api/mcp` with `Authorization: Bearer <token>` is still the right path.
 
 ## Deploy
 

@@ -61,6 +61,94 @@ function pgliteBootstrapPlugin(): Plugin {
  * and returns the 302 / completion HTML. Deployed apps do not use the popup
  * (full-page OAuth redirect), so `apply: "serve"` is enough.
  */
+function isOAuthWellKnownPath(path: string) {
+  const normalized = path.replace(/\/+$/, "") || "/";
+  return (
+    normalized === "/.well-known/oauth-authorization-server" ||
+    normalized === "/.well-known/oauth-authorization-server/api/mcp" ||
+    normalized === "/.well-known/oauth-protected-resource" ||
+    normalized === "/.well-known/oauth-protected-resource/api/mcp" ||
+    normalized === "/.well-known/openid-configuration" ||
+    normalized === "/.well-known/openid-configuration/api/mcp"
+  );
+}
+
+/**
+ * Dev-server half of MCP OAuth discovery. Cursor loads
+ * `/.well-known/oauth-authorization-server` at the origin root; if this falls
+ * through to the SPA HTML it reports HTTP 500 on metadata.
+ */
+function mcpOauthWellKnownPlugin(): Plugin {
+  return {
+    name: "app-builder:mcp-oauth-well-known",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        try {
+          const rawUrl = req.url ?? "";
+          const pathOnly = rawUrl.split("?", 1)[0] ?? "";
+          if (!isOAuthWellKnownPath(pathOnly)) {
+            next();
+            return;
+          }
+          const method = (req.method ?? "GET").toUpperCase();
+          if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+            res.statusCode = 405;
+            res.setHeader("content-type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ error: "invalid_request" }));
+            return;
+          }
+
+          const host = String(
+            req.headers["x-forwarded-host"] ?? req.headers.host ?? "localhost:8080",
+          );
+          const proto = String(
+            req.headers["x-forwarded-proto"] ??
+              ((req.socket as { encrypted?: boolean } | undefined)?.encrypted
+                ? "https"
+                : "http"),
+          );
+          const requestHeaders = new Headers();
+          for (const [key, value] of Object.entries(req.headers)) {
+            if (value === undefined) continue;
+            if (Array.isArray(value)) {
+              for (const item of value) requestHeaders.append(key, item);
+            } else {
+              requestHeaders.set(key, value);
+            }
+          }
+          if (!requestHeaders.has("host")) requestHeaders.set("host", host);
+
+          const request = new Request(`${proto}://${host}${rawUrl}`, {
+            method,
+            headers: requestHeaders,
+          });
+          const mod = (await server.ssrLoadModule("/src/lib/board/mcp-oauth.ts")) as {
+            handleWellKnown: (req: Request) => Response;
+          };
+          const response = await mod.handleWellKnown(request);
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => {
+            res.setHeader(key, value);
+          });
+          if (method === "HEAD") {
+            res.end();
+            return;
+          }
+          res.end(Buffer.from(await response.arrayBuffer()));
+        } catch (err) {
+          console.error("[app-builder] MCP OAuth well-known handler failed:", err);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.setHeader("content-type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ error: "server_error" }));
+          }
+        }
+      });
+    },
+  };
+}
+
 function authPopupPlugin(): Plugin {
   return {
     name: "app-builder:auth-popup",
@@ -161,6 +249,8 @@ export default defineConfig(({ command, isPreview }) => ({
     pgliteBootstrapPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.
     authPopupPlugin(),
+    // Before tanstackStart so OAuth metadata is JSON, not the SPA HTML.
+    mcpOauthWellKnownPlugin(),
     // Dev-only /__app-env, read by scripts/check-auth-invariant.mjs.
     appEnvPlugin(),
     // PWA head + ?install=1 tutorial page; runs before Start/Nitro.

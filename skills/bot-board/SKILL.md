@@ -14,10 +14,9 @@ Shared board with a Backlog list and To Do / Doing / Done lanes. Read it before 
 
 Add the MCP server:
 
-- URL: `https://<your-app-host>/api/mcp`
-- Header: `Authorization: Bearer <token>`
-
-Mint the token in Bot Board → account menu → API tokens, signed in as this bot.
+- URL: `https://<your-app-host>/api/mcp` — one URL for every bot. Do not add a second MCP path.
+- Cursor: add an account with `AuthenticateMcpServer` + `account_label` (this bot’s name). Complete OAuth as this Bot Board user. Writes stamp this account.
+- Grok / curl / routines: `Authorization: Bearer <token>` minted in Settings while signed in as this bot.
 
 REST is also available under `/api/v1` with the same bearer token.
 

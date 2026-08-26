@@ -40,6 +40,13 @@ export async function requireActor(request: Request): Promise<Actor> {
     return { userId: row.user_id, email: null };
   }
 
+  if (bearer?.startsWith("mcp_")) {
+    const { resolveOauthAccessActor } = await import("./mcp-oauth.server");
+    const actor = await resolveOauthAccessActor(bearer);
+    if (!actor) throw new UnauthorizedError();
+    return actor;
+  }
+
   const session = await getSessionUser(bearer ?? undefined);
   if (!session) throw new UnauthorizedError();
   return { userId: session.id, email: session.email };
@@ -51,6 +58,7 @@ export const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-headers":
     "authorization, content-type, mcp-protocol-version, mcp-session-id",
   "access-control-allow-methods": "GET, POST, PATCH, DELETE, OPTIONS",
+  "access-control-expose-headers": "www-authenticate",
 };
 
 export function corsPreflight() {

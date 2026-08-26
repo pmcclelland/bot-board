@@ -46,7 +46,7 @@ const sheetVariants = cva(
           "inset-y-0 right-0 h-full w-full",
           "border-l border-border",
           "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
-          "md:inset-y-auto md:top-[var(--board-chrome-top,0px)] md:bottom-0 md:h-auto md:w-task-sheet md:rounded-l-md",
+          "md:inset-y-auto md:top-[var(--board-chrome-top,0px)] md:bottom-0 md:h-auto md:w-[var(--width-task-sheet)] md:rounded-l-md",
         ),
       },
     },

@@ -4,7 +4,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -74,7 +73,12 @@ export function CardSheet({
       <SheetContent
         side="right"
         showCloseButton={false}
+        tabIndex={-1}
         className="gap-0 p-0"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement | null)?.focus();
+        }}
         onCloseAutoFocus={onCloseAutoFocus}
         onPointerDownOutside={ignoreDismissFromPopover}
         onInteractOutside={ignoreDismissFromPopover}
@@ -103,13 +107,12 @@ export function CardSheet({
                   onBlur={() => form.markTouched("title")}
                   placeholder="What needs to happen?"
                   maxLength={120}
-                  autoFocus
                   rows={1}
                   aria-label="Title"
                   aria-required
                   aria-invalid={Boolean(titleError)}
                   aria-describedby={titleError ? "card-title-error" : undefined}
-                  className="field-sizing-content w-full resize-none bg-transparent p-0 text-base leading-snug font-semibold text-pretty text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70 aria-invalid:ring-2 aria-invalid:ring-danger/70"
+                  className="field-sizing-content w-full resize-none bg-transparent p-0 text-base leading-snug font-semibold text-pretty text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-fg/25 aria-invalid:ring-2 aria-invalid:ring-danger/70"
                 />
                 <FieldError id="card-title-error" message={titleError} />
               </div>
@@ -129,7 +132,7 @@ export function CardSheet({
                   aria-describedby={
                     descriptionError ? "card-description-error" : undefined
                   }
-                  className="field-sizing-content min-h-16 w-full resize-none bg-transparent p-0 text-dek font-normal text-pretty text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring/70 aria-invalid:ring-2 aria-invalid:ring-danger/70"
+                  className="field-sizing-content min-h-16 w-full resize-none bg-transparent p-0 text-dek font-normal text-pretty text-fg outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-fg/25 aria-invalid:ring-2 aria-invalid:ring-danger/70"
                 />
                 <FieldError
                   id="card-description-error"
@@ -269,10 +272,11 @@ export function CardSheet({
             </div>
           </div>
 
-          <SheetFooter className="flex-col gap-2 px-4 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))] md:flex-row md:justify-end">
+          <div className="flex flex-col gap-2 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] md:flex-row md:justify-end">
             <Button
               type="button"
               variant="ghost"
+              className="w-full md:w-auto"
               onClick={() => onOpenChange(false)}
             >
               Cancel
@@ -280,7 +284,7 @@ export function CardSheet({
             <Button type="submit" className="w-full md:w-auto">
               Save changes
             </Button>
-          </SheetFooter>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

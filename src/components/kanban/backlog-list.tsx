@@ -77,6 +77,7 @@ export function BacklogCardView({
     >
       <button
         type="button"
+        aria-label={`Open ${card.title}`}
         onClick={() => onEdit(card.id)}
         className="min-w-0 flex-1 cursor-pointer truncate text-left text-sm font-semibold text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
       >

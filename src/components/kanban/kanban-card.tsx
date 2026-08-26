@@ -74,6 +74,7 @@ export function KanbanCardView({
         <div className="min-w-0 flex-1">
           <button
             type="button"
+            aria-label={`Open ${card.title}`}
             onClick={() => onEdit(card.id)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {

@@ -74,11 +74,11 @@ function CardDek({ text }: { text: string }) {
   return (
     <p
       ref={ref}
-      className={cn(
-        "text-dek mt-2 font-normal text-pretty text-muted",
+      className={`text-dek ${cn(
+        "mt-2 font-normal text-pretty text-muted",
         expanded ? "max-h-64 overflow-y-auto" : "line-clamp-2",
         overflows && "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
-      )}
+      )}`}
       role={overflows ? "button" : undefined}
       tabIndex={overflows ? 0 : undefined}
       aria-expanded={overflows ? expanded : undefined}

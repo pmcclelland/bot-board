@@ -189,7 +189,7 @@ export function CardSheet({
                         ? "Tag limit reached"
                         : form.tags.length > 0
                           ? "Add a tag"
-                          : "Tags"
+                          : "No tags"
                     }
                     maxLength={24}
                     disabled={form.tags.length >= MAX_TAGS}
@@ -218,7 +218,7 @@ export function CardSheet({
                     value={form.url}
                     onChange={(event) => form.setUrl(event.target.value)}
                     onBlur={() => form.markTouched("url")}
-                    placeholder="Link"
+                    placeholder="No link"
                     spellCheck={false}
                     aria-label="Link"
                     aria-invalid={Boolean(urlError)}

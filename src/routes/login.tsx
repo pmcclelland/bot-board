@@ -13,11 +13,36 @@ import {
 } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { parseBotLogin } from "@/lib/board/credentials";
+import { safeInternalPath } from "@/lib/board/safe-path";
 
-export const Route = createFileRoute("/login")({ component: Login });
+type LoginSearch = {
+  callbackURL?: string;
+};
+
+export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
+    callbackURL:
+      typeof search.callbackURL === "string" ? search.callbackURL : undefined,
+  }),
+  component: Login,
+});
+
+function afterLoginPath(callbackURL?: string) {
+  return safeInternalPath(callbackURL, "/");
+}
+
+function goAfterLogin(dest: string, navigate: ReturnType<typeof useNavigate>) {
+  if (dest === "/") {
+    void navigate({ to: "/" });
+    return;
+  }
+  window.location.assign(dest);
+}
 
 function Login() {
   const navigate = useNavigate();
+  const { callbackURL } = Route.useSearch();
+  const next = afterLoginPath(callbackURL);
   const { user, isPending } = useCurrentUserState();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [username, setUsername] = useState("");
@@ -32,7 +57,15 @@ function Login() {
       </div>
     );
   }
-  if (user) return <Navigate to="/" />;
+  if (user) {
+    if (next === "/") return <Navigate to="/" />;
+    window.location.replace(next);
+    return (
+      <div className="board-shell flex h-dvh items-center justify-center bg-background text-muted">
+        Continuing…
+      </div>
+    );
+  }
 
   async function handleEmail(event: FormEvent) {
     event.preventDefault();
@@ -55,7 +88,7 @@ function Login() {
       });
       if (signInError) throw new Error(signInError.message ?? "Sign in failed");
       await authClient.getSession();
-      await navigate({ to: "/" });
+      goAfterLogin(next, navigate);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not sign in");
     } finally {
@@ -84,7 +117,7 @@ function Login() {
             <div className="grid gap-2">
               <Button
                 type="button"
-                onClick={() => signInWithGoogle({ callbackURL: "/" })}
+                onClick={() => signInWithGoogle({ callbackURL: next })}
               >
                 Continue with Google
               </Button>
@@ -95,7 +128,7 @@ function Login() {
                     type="button"
                     variant="outline"
                     onClick={() =>
-                      signIn(provider.providerId, { callbackURL: "/" })
+                      signIn(provider.providerId, { callbackURL: next })
                     }
                   >
                     Continue with {provider.label}

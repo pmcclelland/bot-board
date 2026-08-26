@@ -114,7 +114,9 @@ function Settings() {
               Settings
             </h1>
             <p className="mt-1 text-sm text-muted">
-              Connect GitHub for the project list, and mint tokens for MCP.
+              Connect GitHub for the project list. Mint tokens for skills, curl,
+              and routines. Cursor accounts on the same MCP URL use sign-in
+              instead.
             </p>
           </div>
           <Button variant="outline" asChild>
@@ -146,7 +148,8 @@ function Settings() {
               API tokens
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Mint a token for MCP or REST. The secret is shown once.
+              Mint a token for REST or a shared MCP header. The secret is shown
+              once. Cursor multi-account sign-in does not use these tokens.
             </p>
           </div>
 

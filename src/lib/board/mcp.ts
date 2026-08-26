@@ -1,5 +1,6 @@
 import { UnauthorizedError } from "@/lib/auth/verify.server";
 import { CORS_HEADERS, corsPreflight, jsonError, requireActor } from "./actor.server";
+import { mcpUnauthorized } from "./mcp-oauth.server";
 import { ServiceError } from "./service";
 import * as board from "./service";
 
@@ -196,6 +197,8 @@ async function callTool(name: string, args: Record<string, unknown>, actor: Awai
 export async function handleMcp(request: Request): Promise<Response> {
   if (request.method === "OPTIONS") return corsPreflight();
   if (request.method === "GET") {
+    const header = request.headers.get("authorization");
+    if (!header) return mcpUnauthorized(request);
     return new Response(null, { status: 405, headers: CORS_HEADERS });
   }
   try {
@@ -247,7 +250,7 @@ export async function handleMcp(request: Request): Promise<Response> {
     return rpcJson(rpcError(id, -32601, `Method not found: ${method}`));
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return jsonError(401, "Unauthorized", "unauthorized");
+      return mcpUnauthorized(request);
     }
     if (error instanceof ServiceError) {
       return rpcJson({

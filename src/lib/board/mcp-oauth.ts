@@ -90,25 +90,62 @@ export function protectedResourceMetadata(origin: string) {
   };
 }
 
+const AUTH_SERVER_PATHS = new Set([
+  "/.well-known/oauth-authorization-server",
+  "/.well-known/oauth-authorization-server/api/mcp",
+  "/.well-known/openid-configuration",
+  "/.well-known/openid-configuration/api/mcp",
+  "/api/mcp/.well-known/oauth-authorization-server",
+  "/api/mcp/.well-known/openid-configuration",
+]);
+
+const PROTECTED_RESOURCE_PATHS = new Set([
+  "/.well-known/oauth-protected-resource",
+  "/.well-known/oauth-protected-resource/api/mcp",
+  "/api/mcp/.well-known/oauth-protected-resource",
+]);
+
+export const OAUTH_POST_ONLY_PATHS = [
+  "/oauth/token",
+  "/oauth/register",
+  "/oauth/revoke",
+  "/oauth/decision",
+] as const;
+
+export function normalizePathname(pathname: string) {
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
+/** True when a client is probing OAuth metadata — never fall through to HTML. */
+export function isOAuthWellKnownPath(pathname: string) {
+  const path = normalizePathname(pathname);
+  return (
+    path.startsWith("/.well-known/oauth-") ||
+    path.startsWith("/.well-known/openid-configuration") ||
+    path.startsWith("/api/mcp/.well-known/")
+  );
+}
+
+export function isOauthPostOnlyPath(pathname: string) {
+  return (OAUTH_POST_ONLY_PATHS as readonly string[]).includes(
+    normalizePathname(pathname),
+  );
+}
+
 export function wellKnownKind(
   pathname: string,
 ): "authorization-server" | "protected-resource" | "not-found" {
-  const path = pathname.replace(/\/+$/, "") || "/";
-  if (
-    path === "/.well-known/oauth-authorization-server" ||
-    path === "/.well-known/oauth-authorization-server/api/mcp" ||
-    path === "/.well-known/openid-configuration" ||
-    path === "/.well-known/openid-configuration/api/mcp"
-  ) {
-    return "authorization-server";
-  }
-  if (
-    path === "/.well-known/oauth-protected-resource" ||
-    path === "/.well-known/oauth-protected-resource/api/mcp"
-  ) {
-    return "protected-resource";
-  }
+  const path = normalizePathname(pathname);
+  if (AUTH_SERVER_PATHS.has(path)) return "authorization-server";
+  if (PROTECTED_RESOURCE_PATHS.has(path)) return "protected-resource";
   return "not-found";
+}
+
+export function oauthMethodNotAllowed(allowed = "POST") {
+  return Response.json(
+    { error: "invalid_request", error_description: `Use ${allowed}.` },
+    { status: 405, headers: { ...OAUTH_CORS_HEADERS, allow: allowed } },
+  );
 }
 
 export function isLoopbackHost(hostname: string) {

@@ -31,6 +31,9 @@ import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
 import { Route as DotwellKnownOauthAuthorizationServerApiMcpRouteImport } from './routes/[.]well-known/oauth-authorization-server.api.mcp'
 import { Route as DotwellKnownOauthProtectedResourceApiMcpRouteImport } from './routes/[.]well-known/oauth-protected-resource.api.mcp'
 import { Route as DotwellKnownOpenidConfigurationApiMcpRouteImport } from './routes/[.]well-known/openid-configuration.api.mcp'
+import { Route as ApiMcpDotwellKnownOauthAuthorizationServerRouteImport } from './routes/api/mcp/[.]well-known/oauth-authorization-server'
+import { Route as ApiMcpDotwellKnownOauthProtectedResourceRouteImport } from './routes/api/mcp/[.]well-known/oauth-protected-resource'
+import { Route as ApiMcpDotwellKnownOpenidConfigurationRouteImport } from './routes/api/mcp/[.]well-known/openid-configuration'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -148,6 +151,24 @@ const DotwellKnownOpenidConfigurationApiMcpRoute =
     path: '/api/mcp',
     getParentRoute: () => DotwellKnownOpenidConfigurationRoute,
   } as any)
+const ApiMcpDotwellKnownOauthAuthorizationServerRoute =
+  ApiMcpDotwellKnownOauthAuthorizationServerRouteImport.update({
+    id: '/.well-known/oauth-authorization-server',
+    path: '/.well-known/oauth-authorization-server',
+    getParentRoute: () => ApiMcpRoute,
+  } as any)
+const ApiMcpDotwellKnownOauthProtectedResourceRoute =
+  ApiMcpDotwellKnownOauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => ApiMcpRoute,
+  } as any)
+const ApiMcpDotwellKnownOpenidConfigurationRoute =
+  ApiMcpDotwellKnownOpenidConfigurationRouteImport.update({
+    id: '/.well-known/openid-configuration',
+    path: '/.well-known/openid-configuration',
+    getParentRoute: () => ApiMcpRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,7 +179,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRouteWithChildren
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRouteWithChildren
-  '/api/mcp': typeof ApiMcpRoute
+  '/api/mcp': typeof ApiMcpRouteWithChildren
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/decision': typeof OauthDecisionRoute
@@ -172,6 +193,9 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-authorization-server/api/mcp': typeof DotwellKnownOauthAuthorizationServerApiMcpRoute
   '/.well-known/oauth-protected-resource/api/mcp': typeof DotwellKnownOauthProtectedResourceApiMcpRoute
   '/.well-known/openid-configuration/api/mcp': typeof DotwellKnownOpenidConfigurationApiMcpRoute
+  '/api/mcp/.well-known/oauth-authorization-server': typeof ApiMcpDotwellKnownOauthAuthorizationServerRoute
+  '/api/mcp/.well-known/oauth-protected-resource': typeof ApiMcpDotwellKnownOauthProtectedResourceRoute
+  '/api/mcp/.well-known/openid-configuration': typeof ApiMcpDotwellKnownOpenidConfigurationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,7 +206,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRouteWithChildren
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRouteWithChildren
-  '/api/mcp': typeof ApiMcpRoute
+  '/api/mcp': typeof ApiMcpRouteWithChildren
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/decision': typeof OauthDecisionRoute
@@ -196,6 +220,9 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-authorization-server/api/mcp': typeof DotwellKnownOauthAuthorizationServerApiMcpRoute
   '/.well-known/oauth-protected-resource/api/mcp': typeof DotwellKnownOauthProtectedResourceApiMcpRoute
   '/.well-known/openid-configuration/api/mcp': typeof DotwellKnownOpenidConfigurationApiMcpRoute
+  '/api/mcp/.well-known/oauth-authorization-server': typeof ApiMcpDotwellKnownOauthAuthorizationServerRoute
+  '/api/mcp/.well-known/oauth-protected-resource': typeof ApiMcpDotwellKnownOauthProtectedResourceRoute
+  '/api/mcp/.well-known/openid-configuration': typeof ApiMcpDotwellKnownOpenidConfigurationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -207,7 +234,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRouteWithChildren
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRouteWithChildren
-  '/api/mcp': typeof ApiMcpRoute
+  '/api/mcp': typeof ApiMcpRouteWithChildren
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/decision': typeof OauthDecisionRoute
@@ -221,6 +248,9 @@ export interface FileRoutesById {
   '/.well-known/oauth-authorization-server/api/mcp': typeof DotwellKnownOauthAuthorizationServerApiMcpRoute
   '/.well-known/oauth-protected-resource/api/mcp': typeof DotwellKnownOauthProtectedResourceApiMcpRoute
   '/.well-known/openid-configuration/api/mcp': typeof DotwellKnownOpenidConfigurationApiMcpRoute
+  '/api/mcp/.well-known/oauth-authorization-server': typeof ApiMcpDotwellKnownOauthAuthorizationServerRoute
+  '/api/mcp/.well-known/oauth-protected-resource': typeof ApiMcpDotwellKnownOauthProtectedResourceRoute
+  '/api/mcp/.well-known/openid-configuration': typeof ApiMcpDotwellKnownOpenidConfigurationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -247,6 +277,9 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-authorization-server/api/mcp'
     | '/.well-known/oauth-protected-resource/api/mcp'
     | '/.well-known/openid-configuration/api/mcp'
+    | '/api/mcp/.well-known/oauth-authorization-server'
+    | '/api/mcp/.well-known/oauth-protected-resource'
+    | '/api/mcp/.well-known/openid-configuration'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -271,6 +304,9 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-authorization-server/api/mcp'
     | '/.well-known/oauth-protected-resource/api/mcp'
     | '/.well-known/openid-configuration/api/mcp'
+    | '/api/mcp/.well-known/oauth-authorization-server'
+    | '/api/mcp/.well-known/oauth-protected-resource'
+    | '/api/mcp/.well-known/openid-configuration'
   id:
     | '__root__'
     | '/'
@@ -295,6 +331,9 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-authorization-server/api/mcp'
     | '/.well-known/oauth-protected-resource/api/mcp'
     | '/.well-known/openid-configuration/api/mcp'
+    | '/api/mcp/.well-known/oauth-authorization-server'
+    | '/api/mcp/.well-known/oauth-protected-resource'
+    | '/api/mcp/.well-known/openid-configuration'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -306,7 +345,7 @@ export interface RootRouteChildren {
   DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRouteWithChildren
   DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   DotwellKnownOpenidConfigurationRoute: typeof DotwellKnownOpenidConfigurationRouteWithChildren
-  ApiMcpRoute: typeof ApiMcpRoute
+  ApiMcpRoute: typeof ApiMcpRouteWithChildren
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   OauthConsentRoute: typeof OauthConsentRoute
   OauthDecisionRoute: typeof OauthDecisionRoute
@@ -475,6 +514,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownOpenidConfigurationApiMcpRouteImport
       parentRoute: typeof DotwellKnownOpenidConfigurationRoute
     }
+    '/api/mcp/.well-known/oauth-authorization-server': {
+      id: '/api/mcp/.well-known/oauth-authorization-server'
+      path: '/.well-known/oauth-authorization-server'
+      fullPath: '/api/mcp/.well-known/oauth-authorization-server'
+      preLoaderRoute: typeof ApiMcpDotwellKnownOauthAuthorizationServerRouteImport
+      parentRoute: typeof ApiMcpRoute
+    }
+    '/api/mcp/.well-known/oauth-protected-resource': {
+      id: '/api/mcp/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/api/mcp/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof ApiMcpDotwellKnownOauthProtectedResourceRouteImport
+      parentRoute: typeof ApiMcpRoute
+    }
+    '/api/mcp/.well-known/openid-configuration': {
+      id: '/api/mcp/.well-known/openid-configuration'
+      path: '/.well-known/openid-configuration'
+      fullPath: '/api/mcp/.well-known/openid-configuration'
+      preLoaderRoute: typeof ApiMcpDotwellKnownOpenidConfigurationRouteImport
+      parentRoute: typeof ApiMcpRoute
+    }
   }
 }
 
@@ -523,6 +583,24 @@ const DotwellKnownOpenidConfigurationRouteWithChildren =
     DotwellKnownOpenidConfigurationRouteChildren,
   )
 
+interface ApiMcpRouteChildren {
+  ApiMcpDotwellKnownOauthAuthorizationServerRoute: typeof ApiMcpDotwellKnownOauthAuthorizationServerRoute
+  ApiMcpDotwellKnownOauthProtectedResourceRoute: typeof ApiMcpDotwellKnownOauthProtectedResourceRoute
+  ApiMcpDotwellKnownOpenidConfigurationRoute: typeof ApiMcpDotwellKnownOpenidConfigurationRoute
+}
+
+const ApiMcpRouteChildren: ApiMcpRouteChildren = {
+  ApiMcpDotwellKnownOauthAuthorizationServerRoute:
+    ApiMcpDotwellKnownOauthAuthorizationServerRoute,
+  ApiMcpDotwellKnownOauthProtectedResourceRoute:
+    ApiMcpDotwellKnownOauthProtectedResourceRoute,
+  ApiMcpDotwellKnownOpenidConfigurationRoute:
+    ApiMcpDotwellKnownOpenidConfigurationRoute,
+}
+
+const ApiMcpRouteWithChildren =
+  ApiMcpRoute._addFileChildren(ApiMcpRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
@@ -535,7 +613,7 @@ const rootRouteChildren: RootRouteChildren = {
     DotwellKnownOauthProtectedResourceRouteWithChildren,
   DotwellKnownOpenidConfigurationRoute:
     DotwellKnownOpenidConfigurationRouteWithChildren,
-  ApiMcpRoute: ApiMcpRoute,
+  ApiMcpRoute: ApiMcpRouteWithChildren,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   OauthConsentRoute: OauthConsentRoute,
   OauthDecisionRoute: OauthDecisionRoute,

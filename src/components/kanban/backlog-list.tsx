@@ -308,7 +308,7 @@ export function BacklogList({
       </header>
 
       {open ? (
-        <div className="flex max-h-56 flex-col gap-1 overflow-y-auto overscroll-contain px-0.5 py-1 md:max-h-64">
+        <div className="ink-scroll lane-scroll flex max-h-56 flex-col gap-1 overflow-y-auto overscroll-contain px-0.5 py-1 md:max-h-64">
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             {cards.map((card) => (
               <SortableBacklogCard

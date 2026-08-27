@@ -80,7 +80,7 @@ export function KanbanColumn({
 
       <div
         ref={setNodeRef}
-        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-0.5 py-1"
+        className="ink-scroll lane-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-0.5 py-1"
       >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (

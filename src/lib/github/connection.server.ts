@@ -65,9 +65,16 @@ function mapConnection(row: ConnectionSql): GithubConnectionRow {
   };
 }
 
+export type GithubConnectionPublicFields = {
+  login: string;
+  avatarUrl: string | null;
+  status: GithubConnectionStatus;
+  connectedAt: string;
+};
+
 export function toPublicConnection(
   configured: boolean,
-  row: GithubConnectionRow | null,
+  row: GithubConnectionPublicFields | null,
 ): GithubConnectionPublic {
   if (!row) {
     return {
@@ -101,6 +108,45 @@ export async function getWorkspaceConnection(): Promise<GithubConnectionRow | nu
     limit 1
   `;
   return rows[0] ? mapConnection(rows[0]) : null;
+}
+
+/** last_synced_at only — used to skip GitHub sync without pulling encrypted tokens. */
+export async function getWorkspaceConnectionSyncMeta(): Promise<{
+  lastSyncedAt: string | null;
+} | null> {
+  const sql = await getSql();
+  const rows = await sql<{ last_synced_at: string | Date | null }>`
+    select last_synced_at
+    from github_connections
+    where id = ${WORKSPACE_CONNECTION_ID}
+    limit 1
+  `;
+  if (!rows[0]) return null;
+  return { lastSyncedAt: toIso(rows[0].last_synced_at) };
+}
+
+/** Public GitHub connection fields — no encrypted tokens on the board-load path. */
+export async function getWorkspaceConnectionPublic(): Promise<GithubConnectionPublicFields | null> {
+  const sql = await getSql();
+  const rows = await sql<{
+    login: string;
+    avatar_url: string | null;
+    status: string;
+    connected_at: string | Date;
+  }>`
+    select login, avatar_url, status, connected_at
+    from github_connections
+    where id = ${WORKSPACE_CONNECTION_ID}
+    limit 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    login: row.login,
+    avatarUrl: row.avatar_url,
+    status: row.status === "broken" ? "broken" : "connected",
+    connectedAt: toIso(row.connected_at) ?? new Date().toISOString(),
+  };
 }
 
 export async function replaceWorkspaceConnection(input: {

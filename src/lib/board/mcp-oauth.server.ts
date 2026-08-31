@@ -87,6 +87,33 @@ function mintSecret(prefix: string) {
   return `${prefix}${randomBytes(24).toString("base64url")}`;
 }
 
+const OAUTH_PURGE_BATCH = 500;
+
+/** Drop used/expired codes and revoked or fully-expired tokens so the tables stay bounded. */
+export async function purgeExpiredOauthArtifacts() {
+  const sql = await getSql();
+  await sql`
+    delete from mcp_oauth_tokens
+    where id in (
+      select id from mcp_oauth_tokens
+      where revoked_at is not null
+         or (
+           access_expires_at <= now()
+           and (refresh_expires_at is null or refresh_expires_at <= now())
+         )
+      limit ${OAUTH_PURGE_BATCH}
+    )
+  `;
+  await sql`
+    delete from mcp_oauth_codes
+    where id in (
+      select id from mcp_oauth_codes
+      where expires_at <= now()
+      limit ${OAUTH_PURGE_BATCH}
+    )
+  `;
+}
+
 type ClientRow = {
   id: string;
   client_name: string;
@@ -418,11 +445,7 @@ async function exchangeAuthorizationCode(body: Record<string, string>) {
     return oauthError(400, "invalid_grant", "redirect_uri does not match this code.");
   }
   if (row.used_at) {
-    await sql`
-      update mcp_oauth_tokens
-      set revoked_at = now()
-      where code_id = ${row.id} and revoked_at is null
-    `;
+    await sql`delete from mcp_oauth_tokens where code_id = ${row.id}`;
     return oauthError(400, "invalid_grant", "Authorization code already used.");
   }
   if (new Date(row.expires_at).getTime() <= Date.now()) {
@@ -469,7 +492,7 @@ async function exchangeRefreshToken(body: Record<string, string>) {
   if (row.refresh_expires_at && new Date(row.refresh_expires_at).getTime() <= Date.now()) {
     return oauthError(400, "invalid_grant", "Refresh token expired.");
   }
-  await sql`update mcp_oauth_tokens set revoked_at = now() where id = ${row.id}`;
+  await sql`delete from mcp_oauth_tokens where id = ${row.id}`;
   return issueTokens({
     codeId: null,
     clientId: row.client_id,
@@ -501,6 +524,7 @@ async function issueTokens(input: {
       ${new Date(Date.now() + REFRESH_TTL_MS).toISOString()}
     )
   `;
+  await purgeExpiredOauthArtifacts();
   return oauthJson({
     access_token: access,
     token_type: "Bearer",
@@ -521,9 +545,8 @@ export async function handleRevoke(request: Request): Promise<Response> {
   const sql = await getSql();
   const hashed = hashToken(token);
   await sql`
-    update mcp_oauth_tokens
-    set revoked_at = now()
-    where revoked_at is null and (access_hash = ${hashed} or refresh_hash = ${hashed})
+    delete from mcp_oauth_tokens
+    where access_hash = ${hashed} or refresh_hash = ${hashed}
   `;
   return new Response(null, { status: 200, headers: OAUTH_JSON_HEADERS });
 }

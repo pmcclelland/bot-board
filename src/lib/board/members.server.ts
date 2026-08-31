@@ -4,6 +4,7 @@ import {
   isProfileEmail,
   publicProfileEmail,
 } from "./credentials";
+import { planExistingMemberWrite } from "./members-ensure";
 import { ServiceError } from "./service";
 
 export type MemberRole = "admin" | "member";
@@ -147,49 +148,50 @@ export async function ensureMember(userId: string): Promise<Member> {
   const info = await profile(userId);
   const existing = await getMember(userId);
   const listedAdmin = adminEmails().includes(info.email.trim().toLowerCase());
-  const sql = await getSql();
-  const profileEmail = publicProfileEmail(info.email);
 
   if (existing) {
-    const nextName = existing.name.trim() ? existing.name : info.name;
-    await sql`
-      update members set
-        name = ${nextName},
-        email = ${existing.email},
-        image = ${info.image}
-      where user_id = ${userId}
-    `;
-    if (listedAdmin && (existing.status !== "approved" || existing.role !== "admin")) {
-      await sql`
-        update members set
-          role = 'admin',
-          status = 'approved',
-          decided_at = now(),
-          decided_by = ${userId}
-        where user_id = ${userId}
-      `;
-    }
-    return (await getMember(userId)) ?? {
-      ...existing,
-      name: nextName,
-      image: info.image,
-    };
+    const plan = planExistingMemberWrite(existing, info, listedAdmin);
+    if (!plan.apply) return existing;
+
+    const sql = await getSql();
+    const rows = plan.promote
+      ? await sql<MemberSql>`
+          update members set
+            name = ${plan.name},
+            image = ${plan.image},
+            role = 'admin',
+            status = 'approved',
+            decided_at = now(),
+            decided_by = ${userId}
+          where user_id = ${userId}
+          returning user_id, email, name, description, image, role, status, created_at, decided_at
+        `
+      : await sql<MemberSql>`
+          update members set
+            name = ${plan.name},
+            image = ${plan.image}
+          where user_id = ${userId}
+          returning user_id, email, name, description, image, role, status, created_at, decided_at
+        `;
+    return rows[0] ? mapMember(rows[0]) : { ...existing, name: plan.name, image: plan.image };
   }
 
   const bootstrapAdmin = listedAdmin || (await approvedAdminCount()) === 0;
   const role: MemberRole = bootstrapAdmin ? "admin" : "member";
   const status: MemberStatus = bootstrapAdmin ? "approved" : "pending";
-  await sql`
+  const sql = await getSql();
+  const profileEmail = publicProfileEmail(info.email);
+  const created = await sql<MemberSql>`
     insert into members (user_id, email, name, description, image, role, status, decided_at, decided_by)
     values (
       ${userId}, ${profileEmail}, ${info.name}, ${""}, ${info.image}, ${role}, ${status},
       ${bootstrapAdmin ? new Date().toISOString() : null},
       ${bootstrapAdmin ? userId : null}
     )
+    returning user_id, email, name, description, image, role, status, created_at, decided_at
   `;
-  const created = await getMember(userId);
-  if (!created) throw new ServiceError(500, "Could not create membership", "internal");
-  return created;
+  if (!created[0]) throw new ServiceError(500, "Could not create membership", "internal");
+  return mapMember(created[0]);
 }
 
 export function assertApproved(member: Member) {

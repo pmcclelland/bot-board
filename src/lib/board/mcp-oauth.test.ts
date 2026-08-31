@@ -4,6 +4,8 @@ import {
   authorizationServerMetadata,
   handleWellKnown,
   isAllowedRedirectUri,
+  isDeadOauthCode,
+  isDeadOauthToken,
   isOAuthWellKnownPath,
   isOauthPostOnlyPath,
   oauthMethodNotAllowed,
@@ -195,6 +197,104 @@ describe("oauthMethodNotAllowed", () => {
     assert.match(response.headers.get("content-type") ?? "", /application\/json/);
     const body = (await response.json()) as { error: string };
     assert.equal(body.error, "invalid_request");
+  });
+});
+
+describe("isDeadOauthToken", () => {
+  const now = Date.parse("2026-08-31T12:00:00.000Z");
+
+  it("keeps a live access token even if refresh is absent", () => {
+    assert.equal(
+      isDeadOauthToken(
+        { accessExpiresAt: "2026-08-31T13:00:00.000Z", refreshExpiresAt: null },
+        now,
+      ),
+      false,
+    );
+  });
+
+  it("keeps a token whose access expired but refresh is still valid", () => {
+    assert.equal(
+      isDeadOauthToken(
+        {
+          accessExpiresAt: "2026-08-31T11:00:00.000Z",
+          refreshExpiresAt: "2026-09-30T12:00:00.000Z",
+        },
+        now,
+      ),
+      false,
+    );
+  });
+
+  it("deletes a revoked token immediately", () => {
+    assert.equal(
+      isDeadOauthToken(
+        {
+          revokedAt: "2026-08-31T11:59:00.000Z",
+          accessExpiresAt: "2026-08-31T13:00:00.000Z",
+          refreshExpiresAt: "2026-09-30T12:00:00.000Z",
+        },
+        now,
+      ),
+      true,
+    );
+  });
+
+  it("deletes when access and refresh have both expired", () => {
+    assert.equal(
+      isDeadOauthToken(
+        {
+          accessExpiresAt: "2026-08-31T11:00:00.000Z",
+          refreshExpiresAt: "2026-08-31T11:30:00.000Z",
+        },
+        now,
+      ),
+      true,
+    );
+  });
+
+  it("deletes an expired access token with no refresh", () => {
+    assert.equal(
+      isDeadOauthToken(
+        { accessExpiresAt: "2026-08-31T11:00:00.000Z", refreshExpiresAt: null },
+        now,
+      ),
+      true,
+    );
+  });
+});
+
+describe("isDeadOauthCode", () => {
+  const now = Date.parse("2026-08-31T12:00:00.000Z");
+
+  it("keeps a used code until its TTL so replay can revoke the family", () => {
+    assert.equal(
+      isDeadOauthCode(
+        { usedAt: "2026-08-31T11:55:00.000Z", expiresAt: "2026-08-31T12:05:00.000Z" },
+        now,
+      ),
+      false,
+    );
+  });
+
+  it("deletes an expired unused code", () => {
+    assert.equal(
+      isDeadOauthCode(
+        { usedAt: null, expiresAt: "2026-08-31T11:50:00.000Z" },
+        now,
+      ),
+      true,
+    );
+  });
+
+  it("deletes a used code after TTL", () => {
+    assert.equal(
+      isDeadOauthCode(
+        { usedAt: "2026-08-31T11:40:00.000Z", expiresAt: "2026-08-31T11:50:00.000Z" },
+        now,
+      ),
+      true,
+    );
   });
 });
 

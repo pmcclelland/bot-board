@@ -1,3 +1,14 @@
+export const GITHUB_SYNC_STALE_MS = 5 * 60 * 1000;
+
+export function isGithubSyncStale(
+  lastSyncedAt: string | null | undefined,
+  now = Date.now(),
+  maxAgeMs = GITHUB_SYNC_STALE_MS,
+): boolean {
+  const last = lastSyncedAt ? Date.parse(lastSyncedAt) : 0;
+  return !Number.isFinite(last) || now - last >= maxAgeMs;
+}
+
 export type ExistingProject = {
   id: string;
   name: string;

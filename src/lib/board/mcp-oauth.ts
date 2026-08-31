@@ -10,6 +10,30 @@ export const CODE_TTL_MS = 10 * 60 * 1000;
 export const ACCESS_TTL_MS = 60 * 60 * 1000;
 export const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+export type OauthTokenExpiry = {
+  revokedAt?: string | Date | null;
+  accessExpiresAt: string | Date;
+  refreshExpiresAt?: string | Date | null;
+};
+
+export type OauthCodeExpiry = {
+  usedAt?: string | Date | null;
+  expiresAt: string | Date;
+};
+
+/** True when a token row can be deleted: revoked, or access and refresh both past. */
+export function isDeadOauthToken(row: OauthTokenExpiry, now = Date.now()): boolean {
+  if (row.revokedAt) return true;
+  if (new Date(row.accessExpiresAt).getTime() > now) return false;
+  if (!row.refreshExpiresAt) return true;
+  return new Date(row.refreshExpiresAt).getTime() <= now;
+}
+
+/** True when an auth code's TTL elapsed. Used codes stay until then for replay detection. */
+export function isDeadOauthCode(row: OauthCodeExpiry, now = Date.now()): boolean {
+  return new Date(row.expiresAt).getTime() <= now;
+}
+
 export const OAUTH_CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers":

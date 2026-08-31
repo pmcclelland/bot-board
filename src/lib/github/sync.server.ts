@@ -2,13 +2,17 @@ import { getSql } from "@/lib/db";
 import { GithubAuthError, listOwnedRepos } from "./api";
 import {
   getWorkspaceConnection,
+  getWorkspaceConnectionSyncMeta,
   markConnectionBroken,
   markConnectionSynced,
   resolveAccessToken,
 } from "./connection.server";
-import { planGithubProjectSync, type ExistingProject } from "./sync";
-
-const STALE_MS = 5 * 60 * 1000;
+import {
+  GITHUB_SYNC_STALE_MS,
+  isGithubSyncStale,
+  planGithubProjectSync,
+  type ExistingProject,
+} from "./sync";
 
 function newProjectId() {
   const id =
@@ -22,15 +26,16 @@ export async function syncGithubProjects(options?: {
   force?: boolean;
   maxAgeMs?: number;
 }): Promise<{ synced: boolean }> {
+  const meta = await getWorkspaceConnectionSyncMeta();
+  if (!meta) return { synced: false };
+
+  const maxAge = options?.maxAgeMs ?? GITHUB_SYNC_STALE_MS;
+  if (!options?.force && !isGithubSyncStale(meta.lastSyncedAt, Date.now(), maxAge)) {
+    return { synced: false };
+  }
+
   const connection = await getWorkspaceConnection();
   if (!connection) return { synced: false };
-
-  const maxAge = options?.maxAgeMs ?? STALE_MS;
-  const last = connection.lastSyncedAt
-    ? Date.parse(connection.lastSyncedAt)
-    : 0;
-  const stale = !Number.isFinite(last) || Date.now() - last >= maxAge;
-  if (!options?.force && !stale) return { synced: false };
 
   try {
     const accessToken = await resolveAccessToken(connection);

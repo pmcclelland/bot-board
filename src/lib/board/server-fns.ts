@@ -200,12 +200,12 @@ export const getGithubConnectionFn = createServerFn({ method: "GET" })
     const { syncGithubProjects } = await import("@/lib/github/sync.server");
     await syncGithubProjects();
     const { githubOAuthConfigured } = await import("@/lib/github/env");
-    const { getWorkspaceConnection, toPublicConnection } = await import(
+    const { getWorkspaceConnectionPublic, toPublicConnection } = await import(
       "@/lib/github/connection.server"
     );
     return toPublicConnection(
       githubOAuthConfigured(),
-      await getWorkspaceConnection(),
+      await getWorkspaceConnectionPublic(),
     );
   });
 

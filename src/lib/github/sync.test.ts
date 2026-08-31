@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  GITHUB_SYNC_STALE_MS,
+  isGithubSyncStale,
   planGithubProjectSync,
   visibleGithubProjects,
   type ExistingProject,
@@ -117,6 +119,28 @@ describe("planGithubProjectSync", () => {
     );
     assert.deepEqual(plan.upserts, []);
     assert.deepEqual(plan.deleteLocal.sort(), ["p-ops", "p-today"]);
+  });
+});
+
+describe("isGithubSyncStale", () => {
+  const now = Date.parse("2026-08-31T12:00:00.000Z");
+
+  it("is stale when never synced", () => {
+    assert.equal(isGithubSyncStale(null, now), true);
+  });
+
+  it("is fresh inside the 5 minute window", () => {
+    assert.equal(
+      isGithubSyncStale("2026-08-31T11:56:00.000Z", now, GITHUB_SYNC_STALE_MS),
+      false,
+    );
+  });
+
+  it("is stale at the window boundary", () => {
+    assert.equal(
+      isGithubSyncStale("2026-08-31T11:55:00.000Z", now, GITHUB_SYNC_STALE_MS),
+      true,
+    );
   });
 });
 

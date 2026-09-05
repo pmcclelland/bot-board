@@ -1,4 +1,4 @@
-import type { Card, Columns, Person, Project } from "./types";
+import type { Card, Columns, Person, Project } from "./types.ts";
 
 const now = Date.now();
 const iso = (daysAgo: number, hours = 0) =>

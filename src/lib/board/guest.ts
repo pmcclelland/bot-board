@@ -1,6 +1,6 @@
-import { demoBoardState } from "./seed";
-import { useBoardStore } from "./store";
-import type { CardInput, ColumnId } from "./types";
+import { demoBoardState } from "./seed.ts";
+import { useBoardStore } from "./store.ts";
+import type { CardInput, ColumnId } from "./types.ts";
 
 export function hydrateGuestBoard() {
   useBoardStore.getState().hydrate(demoBoardState());

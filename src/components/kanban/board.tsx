@@ -22,11 +22,17 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Navigate } from "@tanstack/react-router";
-import { RedirectToSignIn } from "@/lib/auth/gates";
 import { useMembership } from "@/lib/board/use-membership";
+import {
+  guestCreateTask,
+  guestDeleteTask,
+  guestMoveTask,
+  guestUpdateTask,
+  hydrateGuestBoard,
+} from "@/lib/board/guest";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +65,7 @@ import {
 import { BacklogCardView, BacklogList } from "./backlog-list";
 import { BoardHeading } from "./board-heading";
 import { CardDialog, type CardDraft } from "./card-dialog";
+import { DemoBanner } from "./demo-banner";
 import { BoardFilters } from "./filters";
 import { BoardHeader } from "./header";
 import { KanbanCardView } from "./kanban-card";
@@ -94,6 +101,7 @@ function listsEqual(a: string[], b: string[]) {
 
 export function KanbanBoard() {
   const { user, isPending, isApproved, isAdmin } = useMembership();
+  const isGuest = !user;
   const queryClient = useQueryClient();
   const cards = useBoardStore((s) => s.cards);
   const columns = useBoardStore((s) => s.columns);
@@ -111,18 +119,23 @@ export function KanbanBoard() {
     queryKey: ["board"],
     queryFn: () => loadBoardFn(),
     enabled: Boolean(user) && isApproved,
-    refetchInterval: dragging ? false : 3_000,
-    refetchOnWindowFocus: !dragging,
-    refetchOnReconnect: true,
+    refetchInterval: dragging || isGuest ? false : 3_000,
+    refetchOnWindowFocus: !dragging && !isGuest,
+    refetchOnReconnect: !isGuest,
   });
 
+  useLayoutEffect(() => {
+    if (!isGuest) return;
+    hydrateGuestBoard();
+  }, [isGuest]);
+
   useEffect(() => {
-    if (!boardQuery.data || dragging) return;
+    if (isGuest || !boardQuery.data || dragging) return;
     const fingerprint = snapshotFingerprint(boardQuery.data);
     if (fingerprint === lastFingerprint.current) return;
     lastFingerprint.current = fingerprint;
     hydrate(snapshotToState(boardQuery.data));
-  }, [boardQuery.data, dragging, hydrate]);
+  }, [boardQuery.data, dragging, hydrate, isGuest]);
 
   function refreshBoard() {
     void queryClient.invalidateQueries({ queryKey: ["board"] });
@@ -247,7 +260,28 @@ export function KanbanBoard() {
   }, []);
 
   async function handleDialogSubmit(draft: CardDraft) {
+    const input = {
+      title: draft.title,
+      description: draft.description,
+      url: draft.url,
+      tags: draft.tags,
+      columnId: draft.columnId,
+      projectId: draft.projectId,
+      assigneeId: draft.assigneeId,
+    };
     try {
+      if (isGuest) {
+        if (dialog.mode === "create") {
+          guestCreateTask(input);
+          toast("Task added", {
+            description: `Placed in ${COLUMN_META[draft.columnId].label}.`,
+          });
+        } else if (dialog.cardId) {
+          guestUpdateTask(dialog.cardId, input);
+          toast("Task updated");
+        }
+        return;
+      }
       if (dialog.mode === "create") {
         await createTaskFn({ data: draft });
         toast("Task added", {
@@ -266,6 +300,12 @@ export function KanbanBoard() {
   async function confirmDelete() {
     if (!pendingDelete) return;
     try {
+      if (isGuest) {
+        guestDeleteTask(pendingDelete);
+        toast("Task deleted");
+        setPendingDelete(null);
+        return;
+      }
       await deleteTaskFn({ data: { id: pendingDelete } });
       toast("Task deleted");
       setPendingDelete(null);
@@ -277,6 +317,13 @@ export function KanbanBoard() {
 
   async function handleMove(id: string, columnId: ColumnId) {
     try {
+      if (isGuest) {
+        guestMoveTask(id, columnId);
+        toast("Task moved", {
+          description: `Now in ${COLUMN_META[columnId].label}.`,
+        });
+        return;
+      }
       await moveTaskFn({ data: { id, columnId } });
       toast("Task moved", {
         description: `Now in ${COLUMN_META[columnId].label}.`,
@@ -413,6 +460,10 @@ export function KanbanBoard() {
     const lane = useBoardStore.getState().columns[columnId];
     const index = lane.indexOf(id);
     const beforeId = index >= 0 && index < lane.length - 1 ? lane[index + 1] : null;
+    if (isGuest) {
+      guestMoveTask(id, columnId, beforeId);
+      return;
+    }
     try {
       await moveTaskFn({ data: { id, columnId, beforeId } });
       refreshBoard();
@@ -429,28 +480,34 @@ export function KanbanBoard() {
       </div>
     );
   }
-  if (!user) return <RedirectToSignIn />;
-  if (!isApproved) return <Navigate to="/waiting" />;
-  if (boardQuery.isPending && !hasHydrated) {
+  if (!isGuest && !isApproved) return <Navigate to="/waiting" />;
+  if (isGuest && !hasHydrated) {
     return (
       <div className="board-shell flex h-dvh items-center justify-center bg-background text-muted">
         Loading board…
       </div>
     );
   }
-  if (boardQuery.isError && !hasHydrated) {
-    return (
-      <div className="board-shell grid h-dvh place-items-center bg-background px-4 text-fg">
-        <div className="max-w-sm space-y-3 text-center">
-          <p className="text-sm text-muted">Could not load the board.</p>
-          <button
-            type="button"
-            className="text-sm text-primary hover:underline"
-            onClick={() => refreshBoard()}
-          >
-            Try again
-          </button>
+  if (!isGuest && !boardQuery.data) {
+    if (boardQuery.isError) {
+      return (
+        <div className="board-shell grid h-dvh place-items-center bg-background px-4 text-fg">
+          <div className="max-w-sm space-y-3 text-center">
+            <p className="text-sm text-muted">Could not load the board.</p>
+            <button
+              type="button"
+              className="text-sm text-primary hover:underline"
+              onClick={() => refreshBoard()}
+            >
+              Try again
+            </button>
+          </div>
         </div>
+      );
+    }
+    return (
+      <div className="board-shell flex h-dvh items-center justify-center bg-background text-muted">
+        Loading board…
       </div>
     );
   }
@@ -464,6 +521,8 @@ export function KanbanBoard() {
             openCreate(activeLane === "backlog" ? "todo" : activeLane)
           }
         />
+
+        {isGuest ? <DemoBanner /> : null}
 
         <BoardFilters
           query={query}

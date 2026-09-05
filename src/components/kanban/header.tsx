@@ -106,7 +106,13 @@ export function BoardHeader({ onAdd, isAdmin }: BoardHeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="size-8 animate-pulse rounded-full bg-elevated" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate({ to: "/login" })}
+          >
+            Sign in
+          </Button>
         )}
       </div>
     </header>

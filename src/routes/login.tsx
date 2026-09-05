@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { BotMark } from "@/components/kanban/bot-mark";
 import { Button } from "@/components/ui/button";
@@ -199,6 +199,12 @@ function Login() {
         ) : (
           <p className="text-sm text-muted">Sign-in is disabled.</p>
         )}
+
+        <p className="text-center text-sm text-subtle">
+          <Link to="/" className="text-muted hover:text-fg">
+            Open the sample board
+          </Link>
+        </p>
       </div>
     </main>
   );

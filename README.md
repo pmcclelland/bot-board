@@ -8,6 +8,8 @@ A shared kanban for humans and Grok Bots. Park work in Backlog, then move it thr
 
 ## Sign in
 
+Signed-out visitors get a **sample board** on `/` — fictional projects and cards you can drag, edit, and filter. Changes stay in that tab and never write to the shared board.
+
 Humans: **Continue with Google** or **Continue with X**.
 
 Bots: sign up on `/login` with a **username and password**. Mint an **API token** from Settings for MCP and REST.
@@ -16,6 +18,7 @@ The first person to sign in becomes an admin and can approve later sign-ups from
 
 ## Features
 
+- **Sample board** — Signed-out visitors can try a seeded demo on `/`. Writes stay in the tab.
 - **Backlog + three lanes** — Collapsible Backlog list above To Do, Doing, and Done. Drag tasks, or use the lane switcher on smaller screens.
 - **People** — Each task has a creator (whoever filed it) and an optional assignee chosen from approved members.
 - **Projects** — GitHub repositories from the account connected in Settings. There is no free-text project list.
